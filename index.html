@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Neural Network Visualizer</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { 
+            display: block;
+            cursor: grab;
+            touch-action: none;
+        }
+        canvas:active { cursor: grabbing; }
+    </style>
+</head>
+<body>
+    <script type="x-shader/x-vertex" id="vertexShader">
+        precision highp float;
+        varying vec3 vPosition;
+        varying vec3 vNormal;
+
+        void main() {
+            vPosition = position;
+            vNormal = normalize(normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        precision highp float;
+        uniform vec3 colorA;
+        uniform vec3 colorB;
+        varying vec3 vPosition;
+        varying vec3 vNormal;
+
+        void main() {
+            float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 4.0);
+            vec3 glow = mix(colorA, colorB, intensity) * intensity * 2.0;
+            gl_FragColor = vec4(glow, 0.8);
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+
+        class NeuralVisualizer {
+            constructor() {
+                this.initThree();
+                this.createNetwork([4, 6, 6, 2]);
+                this.animate();
+            }
+
+            initThree() {
+                // Scene setup
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x0a0a1a);
+                document.body.appendChild(this.renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x444488);
+                const pointLight = new THREE.PointLight(0x88aaff, 50);
+                pointLight.position.set(10, 10, 10);
+                this.scene.add(ambientLight, pointLight);
+
+                // Controls
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.camera.position.z = 15;
+
+                // Raycasting setup
+                this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2();
+            }
+
+            createNetwork(layers) {
+                const layerSpacing = 4;
+                this.networkLayers = layers.map((neuronCount, i) => {
+                    const layerGroup = new THREE.Group();
+                    const yPos = (i - (layers.length-1)/2) * layerSpacing;
+                    
+                    const neurons = Array.from({ length: neuronCount }).map((_, j) => {
+                        const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+                        const material = new THREE.ShaderMaterial({
+                            uniforms: {
+                                colorA: { value: new THREE.Color(0x00ffff) },
+                                colorB: { value: new THREE.Color(0x0000ff) }
+                            },
+                            vertexShader: document.getElementById('vertexShader').textContent,
+                            fragmentShader: document.getElementById('fragmentShader').textContent,
+                            transparent: true
+                        });
+
+                        const neuron = new THREE.Mesh(geometry, material);
+                        neuron.position.set((j - (neuronCount-1)/2) * 1.5, yPos, 0);
+                        layerGroup.add(neuron);
+                        return neuron;
+                    });
+
+                    this.scene.add(layerGroup);
+                    return neurons;
+                });
+
+                // Create connections
+                for (let i = 0; i < this.networkLayers.length - 1; i++) {
+                    this.networkLayers[i].forEach(startNeuron => {
+                        this.networkLayers[i+1].forEach(endNeuron => {
+                            const weight = Math.random();
+                            this.createConnection(startNeuron.position, endNeuron.position, weight);
+                        });
+                    });
+                }
+            }
+
+            createConnection(startPos, endPos, weight) {
+                const curve = new THREE.LineCurve3(startPos, endPos);
+                const geometry = new THREE.TubeGeometry(curve, 32, weight/2, 8, false);
+                const material = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color().lerpColors(
+                        new THREE.Color(0x00ffff),
+                        new THREE.Color(0x0000ff),
+                        weight
+                    ),
+                    transparent: true,
+                    opacity: 0.6
+                });
+
+                const connection = new THREE.Mesh(geometry, material);
+                this.scene.add(connection);
+
+                // Data flow particles
+                const particleGeometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(100 * 3);
+                particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const particleMaterial = new THREE.PointsMaterial({
+                    size: 0.2,
+                    color: 0x00ffff,
+                    blending: THREE.AdditiveBlending
+                });
+
+                const particles = new THREE.Points(particleGeometry, particleMaterial);
+                this.scene.add(particles);
+                this.dataFlowParticles = this.dataFlowParticles || [];
+                this.dataFlowParticles.push({ particles, curve, progress: 0 });
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Update data flow particles
+                this.dataFlowParticles.forEach(particleData => {
+                    particleData.progress = (particleData.progress + 0.005) % 1;
+                    const positions = particleData.particles.geometry.attributes.position.array;
+                    
+                    for (let i = 0; i < positions.length; i += 3) {
+                        const t = (particleData.progress + (i/positions.length)) % 1;
+                        const pos = particleData.curve.getPoint(t);
+                        positions[i] = pos.x;
+                        positions[i + 1] = pos.y;
+                        positions[i + 2] = pos.z;
+                    }
+                    
+                    particleData.particles.geometry.attributes.position.needsUpdate = true;
+                });
+
+                this.controls.update();
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // Initialize visualizer
+        new NeuralVisualizer();
+    </script>
+</body>
+</html> 
