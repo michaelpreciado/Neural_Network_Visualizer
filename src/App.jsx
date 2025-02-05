@@ -27,6 +27,10 @@ const TitleContainer = styled.div`
   text-align: center;
   z-index: 2;
   pointer-events: none;
+
+  @media (max-width: 768px) {
+    top: 10px;
+  }
 `;
 
 const Title = styled.h1`
@@ -35,11 +39,20 @@ const Title = styled.h1`
   font-weight: 300;
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
   margin-bottom: 10px;
+
+  @media (max-width: 768px) {
+    font-size: min(20px, 5vw);
+    margin-bottom: 5px;
+  }
 `;
 
 const Subtitle = styled.p`
   color: rgba(0, 255, 255, 0.7);
   font-size: min(16px, 4.5vw);
+
+  @media (max-width: 768px) {
+    font-size: min(14px, 4vw);
+  }
 `;
 
 const NetworkStats = styled.div`

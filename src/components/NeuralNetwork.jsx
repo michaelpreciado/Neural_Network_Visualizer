@@ -17,8 +17,9 @@ const NetworkContainer = styled.div`
   pointer-events: none;
 
   @media (max-width: 768px) {
-    height: 60vh;
-    transform: translateY(-75%);
+    top: 40%;
+    height: 70vh;
+    transform: translateY(-50%);
   }
 `;
 
@@ -30,7 +31,7 @@ const NetworkCanvas = styled.canvas`
   pointer-events: auto;
 
   @media (max-width: 768px) {
-    transform: scale(0.8);
+    transform: scale(1);
   }
 `;
 

@@ -19,6 +19,340 @@ void main() {
     gl_FragColor = vec4(color, opacity * intensity);
 }`;
 
+class SceneManager {
+    constructor(canvasId) {
+        this.initThreeJS(canvasId);
+        this.setupPerformanceOptimizations();
+    }
+
+    initThreeJS(canvasId) {
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById(canvasId),
+            powerPreference: 'high-performance',
+            antialias: window.devicePixelRatio < 2
+        });
+        
+        this.scene = new THREE.Scene();
+        this.setupCamera();
+        this.setupLighting();
+        this.setupControls();
+        this.createTensorSpace();
+    }
+
+    setupPerformanceOptimizations() {
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.autoClear = false;
+    }
+
+    setupCamera() {
+        this.camera = new THREE.PerspectiveCamera(50, 
+            window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(40, 25, 40);
+    }
+
+    setupScene() {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x000000);
+        
+        // Wider field of view and adjusted camera position
+        this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(40, 25, 40); // Moved camera further out
+        
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById('visualization'),
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Adjusted controls
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.rotateSpeed = 0.5;
+        this.controls.enableZoom = true;
+        this.controls.enablePan = false;
+        this.controls.autoRotate = true;
+        this.controls.autoRotateSpeed = 0.1; // Slower rotation
+        this.controls.minDistance = 30; // Prevent zooming too close
+        this.controls.maxDistance = 100; // Allow zooming out further
+
+        this.createTensorSpace();
+        this.createNeuralNetwork();
+
+        // Enhanced lighting for better depth perception
+        const ambientLight = new THREE.AmbientLight(0x404040, 1);
+        this.scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0x00ffff, 1.5);
+        mainLight.position.set(1, 1, 1);
+        this.scene.add(mainLight);
+
+        const backLight = new THREE.DirectionalLight(0x00ffff, 0.5);
+        backLight.position.set(-1, -1, -1);
+        this.scene.add(backLight);
+
+        // Optimized resize handler
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }, 100);
+        });
+    }
+
+    createTensorSpace() {
+        // Create globe tensor space with larger radius
+        const globeRadius = 25;
+        const globeGeometry = new THREE.SphereGeometry(globeRadius, 32, 32);
+        const globeMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00ffff,
+            opacity: 0.02,  // Reduced from 0.05
+            transparent: true,
+            wireframe: true,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
+        this.tensorSpace = new THREE.Mesh(globeGeometry, globeMaterial);
+        this.scene.add(this.tensorSpace);
+
+        // Add equatorial ring with reduced visibility
+        const ringGeometry = new THREE.TorusGeometry(globeRadius * 0.8, 0.1, 16, 100);
+        const ringMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00ffff,
+            opacity: 0.06,  // Reduced from 0.15
+            transparent: true,
+            emissive: 0x00ffff,
+            emissiveIntensity: 0.05,  // Reduced from 0.1
+            depthWrite: false
+        });
+        this.equatorialRing = new THREE.Mesh(ringGeometry, ringMaterial);
+        this.equatorialRing.rotation.x = Math.PI / 2;
+        this.scene.add(this.equatorialRing);
+
+        // Add latitude rings with minimal visibility
+        for (let i = 1; i <= 3; i++) {
+            const latitude = (Math.PI / 8) * i;
+            const radius = Math.cos(latitude) * globeRadius * 0.8;
+            const y = Math.sin(latitude) * globeRadius * 0.8;
+
+            const latRingGeometry = new THREE.TorusGeometry(radius, 0.05, 16, 100);
+            const latRingMaterial = new THREE.MeshPhongMaterial({
+                color: 0x00ffff,
+                opacity: 0.03,  // Reduced from 0.08
+                transparent: true,
+                depthWrite: false
+            });
+            
+            // North hemisphere ring
+            const northRing = new THREE.Mesh(latRingGeometry, latRingMaterial);
+            northRing.position.y = y;
+            northRing.rotation.x = Math.PI / 2;
+            this.scene.add(northRing);
+
+            // South hemisphere ring
+            const southRing = new THREE.Mesh(latRingGeometry, latRingMaterial);
+            southRing.position.y = -y;
+            southRing.rotation.x = Math.PI / 2;
+            this.scene.add(southRing);
+        }
+
+        // Add meridian lines with reduced visibility
+        for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            const curve = new THREE.EllipseCurve(
+                0, 0,
+                globeRadius * 0.8, globeRadius * 0.8,
+                0, Math.PI * 2,
+                false,
+                0
+            );
+            
+            const points = curve.getPoints(50);
+            const meridianGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const meridianMaterial = new THREE.LineBasicMaterial({
+                color: 0x00ffff,
+                opacity: 0.03,  // Reduced from 0.08
+                transparent: true,
+                depthWrite: false
+            });
+            
+            const meridian = new THREE.Line(meridianGeometry, meridianMaterial);
+            meridian.rotation.y = angle;
+            this.scene.add(meridian);
+        }
+
+        // Add a very subtle glow effect
+        const glowGeometry = new THREE.SphereGeometry(globeRadius * 1.02, 32, 32);
+        const glowMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                color: { value: new THREE.Color(0x00ffff) },
+                opacity: { value: 0.01 }  // Reduced from 0.02
+            },
+            vertexShader: glowLineVertexShader,
+            fragmentShader: glowLineFragmentShader,
+            side: THREE.BackSide,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            depthWrite: false
+        });
+        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+        this.scene.add(glowMesh);
+    }
+
+    createNeuralNetwork() {
+        const layerConfig = [
+            64,     // Input layer
+            128,    // First hidden layer - Feature extraction
+            256,    // Second hidden layer - Pattern recognition
+            512,    // Third hidden layer - Higher-level features
+            256,    // Fourth hidden layer - Feature combination
+            128,    // Fifth hidden layer - Feature refinement
+            64,     // Sixth hidden layer - Dimensionality reduction
+            101     // Output layer (0-100)
+        ];
+        
+        const spacing = Math.PI / (layerConfig.length - 1); // Spread layers across hemisphere
+        this.nodes = [];
+        this.connections = [];
+
+        layerConfig.forEach((nodeCount, layerIndex) => {
+            const layer = [];
+            const phi = spacing * layerIndex - Math.PI / 2; // Angle from -π/2 to π/2
+            const radius = 15; // Increased radius for circular arrangement
+            const verticalOffset = radius * Math.sin(phi); // Vertical positioning
+
+            // Adjust skip factor based on layer size
+            const skipFactor = Math.ceil(nodeCount / (layerIndex === 0 || layerIndex === layerConfig.length - 1 ? 25 : 30));
+            
+            for (let i = 0; i < nodeCount; i += skipFactor) {
+                const isInput = layerIndex === 0;
+                const isOutput = layerIndex === layerConfig.length - 1;
+                const isMiddle = layerIndex === Math.floor(layerConfig.length / 2);
+                
+                // Adjust node sizes based on layer position
+                const nodeSize = isInput || isOutput ? 0.4 : 
+                               isMiddle ? 0.3 :
+                               0.2;
+                
+                const geometry = new THREE.SphereGeometry(nodeSize, 16, 16);
+                
+                // Color gradient through layers
+                const layerProgress = layerIndex / (layerConfig.length - 1);
+                const color = isInput ? 0x00ff00 : 
+                            isOutput ? 0xff3366 :
+                            new THREE.Color(0x00ffff)
+                                .lerp(new THREE.Color(0xff3366), layerProgress);
+                
+                const material = new THREE.MeshPhongMaterial({
+                    color: color,
+                    opacity: 0.9,
+                    transparent: true,
+                    emissive: color,
+                    emissiveIntensity: 0.5,
+                    shininess: 30
+                });
+
+                const node = new THREE.Mesh(geometry, material);
+                const visibleNodes = Math.ceil(nodeCount / skipFactor);
+                
+                // Position nodes in a complete circle
+                const angle = (i / skipFactor) * (Math.PI * 2) / visibleNodes;
+                const horizontalRadius = radius * Math.cos(phi);
+                
+                node.position.x = horizontalRadius * Math.cos(angle);
+                node.position.y = verticalOffset;
+                node.position.z = horizontalRadius * Math.sin(angle);
+                
+                this.scene.add(node);
+                layer.push(node);
+
+                // Enhanced connection logic
+                if (layerIndex > 0) {
+                    const prevLayer = this.nodes[layerIndex - 1];
+                    const connectionCount = Math.min(
+                        prevLayer.length,
+                        isOutput ? 8 : // More connections to output
+                        isInput ? 4 : // Fewer connections from input
+                        6 // Standard connections for hidden layers
+                    );
+                    
+                    // Connect to nearest nodes in previous layer
+                    for (let j = 0; j < connectionCount; j++) {
+                        const prevNodeIndex = Math.floor((j * prevLayer.length / connectionCount + 
+                            (i / skipFactor * prevLayer.length / visibleNodes)) % prevLayer.length);
+                        const prevNode = prevLayer[prevNodeIndex];
+                        
+                        const connectionGeometry = new THREE.BufferGeometry();
+                        const points = [prevNode.position, node.position];
+                        connectionGeometry.setFromPoints(points);
+                        
+                        // Gradient color for connections
+                        const connectionColor = new THREE.Color(0x00ffff)
+                            .lerp(new THREE.Color(0xff3366), layerProgress);
+                        
+                        const connectionMaterial = new THREE.LineBasicMaterial({
+                            color: connectionColor,
+                            opacity: 0.15,
+                            transparent: true
+                        });
+                        const connection = new THREE.Line(connectionGeometry, connectionMaterial);
+                        this.scene.add(connection);
+                        this.connections.push({
+                            line: connection,
+                            start: prevNode,
+                            end: node,
+                            material: connectionMaterial
+                        });
+                    }
+                }
+            }
+            this.nodes.push(layer);
+        });
+
+        // Adjust camera for the cylindrical network
+        this.camera.position.set(35, 25, 35);
+        this.camera.lookAt(0, 0, 0);
+    }
+
+    animate() {
+        requestAnimationFrame(this.animate.bind(this));
+
+        // Update controls
+        this.controls.update();
+
+        // Rotate globe very slowly
+        this.tensorSpace.rotation.y += 0.0002;
+        if (this.equatorialRing) {
+            this.equatorialRing.rotation.z += 0.0002;
+        }
+
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    // Add visibility change listener
+    visibilityChange() {
+        if (document.visibilityState === 'hidden') {
+            this.renderer.dispose();
+            this.scene.traverse(obj => {
+                if (obj.material) {
+                    obj.material.dispose();
+                }
+                if (obj.geometry) {
+                    obj.geometry.dispose();
+                }
+            });
+        } else {
+            this.initThreeJS();
+        }
+    }
+}
+
 class NeuralNetworkVisualizer {
     constructor() {
         this.setupScene();
@@ -745,6 +1079,39 @@ class NeuralNetworkVisualizer {
         } else {
             this.initThreeJS();
         }
+    }
+}
+
+class UIManager {
+    constructor() {
+        this.setupResponsiveHandlers();
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        const events = {
+            'touchstart': this.handleTouch,
+            'touchmove': this.handleTouch,
+            'touchend': this.handleTouchEnd,
+            'mousedown': this.handleMouseDown,
+            // ... other events
+        };
+        
+        Object.entries(events).forEach(([event, handler]) => {
+            window.addEventListener(event, handler, { passive: false });
+        });
+    }
+
+    handleTouch = (e) => {
+        e.preventDefault();
+        // Unified touch handling logic
+    };
+
+    setupResponsiveHandlers() {
+        const resizeObserver = new ResizeObserver(entries => {
+            this.handleResize(entries[0].contentRect);
+        });
+        resizeObserver.observe(document.body);
     }
 }
 

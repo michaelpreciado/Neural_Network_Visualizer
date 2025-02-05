@@ -140,18 +140,21 @@ body {
 
 .canvas-wrapper {
     position: relative;
-    width: min(150px, 40vw);
-    height: min(150px, 40vw);
+    width: min(300px, 30vw);
+    height: min(300px, 30vw);
     background: rgba(0, 0, 0, 0.7);
     border-radius: 10px;
-    padding: 8px;
-    border: 1px solid var(--primary-cyan-dim);
+    padding: 20px;
+    border: 2px solid var(--primary-cyan-dim);
     box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
     transition: all 0.3s ease;
+    touch-action: none;
+    -webkit-user-drag: none;
+    user-select: none;
 }
 
 #drawing-canvas {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.1);
     border: 2px solid var(--primary-cyan-dim);
     border-radius: 10px;
     cursor: crosshair;
@@ -393,8 +396,8 @@ p {
     }
 
     .canvas-wrapper {
-        width: min(250px, 70vw);
-        height: min(250px, 70vw);
+        width: min(250px, 50vw) !important;
+        height: min(250px, 50vw) !important;
         padding: 15px;
     }
 
@@ -466,9 +469,29 @@ p {
     }
 
     Title {
-        font-size: 1rem;
-        padding: 8px 15px;
-        top: env(safe-area-inset-top, 8px);
+        position: fixed;
+        top: env(safe-area-inset-top, 20px) !important;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        padding: 12px 24px;
+        font-size: 1.4rem;
+        z-index: 1000;
+        backdrop-filter: blur(12px);
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        white-space: nowrap;
+    }
+
+    #visualization {
+        top: calc(50% + 40px) !important;
+    }
+
+    /* Prevent header interaction */
+    Title, Subtitle {
+        pointer-events: none;
+        user-select: none;
     }
 
     .neural-node {
@@ -481,6 +504,36 @@ p {
     
     .tensor-space {
         scale: 0.7;
+    }
+}
+
+/* Landscape orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+    #visualization {
+        width: 60vh !important;
+        height: 60vh !important;
+        top: 55% !important;
+    }
+    
+    .interface-container {
+        flex-direction: row;
+        justify-content: space-evenly;
+        padding-top: 5px;
+    }
+    
+    .canvas-wrapper {
+        width: 25vh !important;
+        height: 25vh !important;
+    }
+
+    Title {
+        font-size: 1.2rem;
+        padding: 8px 16px;
+        top: env(safe-area-inset-top, 10px) !important;
+    }
+    
+    #visualization {
+        top: calc(50% + 30px) !important;
     }
 }
 
@@ -635,22 +688,10 @@ Title {
     }
 }
 
-/* Landscape orientation */
-@media (max-width: 768px) and (orientation: landscape) {
-    #visualization {
-        width: 60vh !important;
-        height: 60vh !important;
-        top: 55% !important;
-    }
-    
-    .interface-container {
-        flex-direction: row;
-        justify-content: space-evenly;
-        padding-top: 5px;
-    }
-    
+/* Larger screens */
+@media (min-width: 1600px) {
     .canvas-wrapper {
-        width: 25vh !important;
-        height: 25vh !important;
+        width: min(400px, 25vw);
+        height: min(400px, 25vw);
     }
 } 

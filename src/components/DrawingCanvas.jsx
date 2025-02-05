@@ -18,11 +18,11 @@ const DrawingContainer = styled.div`
   backdrop-filter: blur(10px);
 
   @media (max-width: 768px) {
-    min-height: 100px;
-    padding: 6px;
-    padding-bottom: max(6px, env(safe-area-inset-bottom, 6px));
+    min-height: 30vh;
+    padding: 4px;
+    padding-bottom: max(4px, env(safe-area-inset-bottom, 4px));
     flex-direction: row;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
     justify-content: space-around;
   }
@@ -34,7 +34,7 @@ const CanvasWrapper = styled.div`
   height: min(160px, 20vw);
   background: rgba(0, 0, 0, 0.7);
   border-radius: 8px;
-  padding: 10px;
+  padding: 0;
   border: 1px solid rgba(0, 255, 255, 0.3);
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
   transition: all 0.3s ease;
@@ -45,9 +45,9 @@ const CanvasWrapper = styled.div`
   }
 
   @media (max-width: 768px) {
-    width: min(100px, 25vw);
-    height: min(100px, 25vw);
-    padding: 3px;
+    width: min(90px, 22vw);
+    height: min(90px, 22vw);
+    padding: 0;
     margin-right: 2px;
   }
 `;
@@ -149,6 +149,7 @@ const StyledCanvas = styled.canvas`
   touch-action: none;
   background: rgba(0, 0, 0, 0.7);
   border-radius: 6px;
+  cursor: crosshair;
 `;
 
 const AlternativePredictions = styled.div`
@@ -174,20 +175,20 @@ const DrawingCanvas = () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       const wrapper = canvas.parentElement;
-      
-      // Get the actual dimensions of the wrapper
       const rect = wrapper.getBoundingClientRect();
       
-      // Set both CSS and canvas dimensions to the same size
-      const size = Math.min(rect.width, rect.height);
-      canvas.style.width = `${size}px`;
-      canvas.style.height = `${size}px`;
-      canvas.width = size;
-      canvas.height = size;
+      // Match CSS size to canvas buffer size
+      const displayWidth = Math.floor(rect.width);
+      const displayHeight = Math.floor(rect.height);
       
-      // Set drawing style
+      canvas.style.width = `${displayWidth}px`;
+      canvas.style.height = `${displayHeight}px`;
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+      
+      // Reset drawing style
       ctx.strokeStyle = '#00ffff';
-      ctx.lineWidth = Math.max(2, size / 15); // Responsive line width
+      ctx.lineWidth = Math.max(4, displayWidth / 15);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     };
@@ -200,21 +201,22 @@ const DrawingCanvas = () => {
   const getDrawingPosition = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     
     let clientX, clientY;
     
-    if (e.touches && e.touches[0]) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
+    if (e.touches?.[0]) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
     } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
+        clientX = e.clientX;
+        clientY = e.clientY;
     }
-    
-    // Direct pixel mapping since canvas dimensions match display dimensions
+
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
     };
   };
 
@@ -368,6 +370,109 @@ const DrawingCanvas = () => {
       setConfidence(0);
       setAlternatives([]);
     }
+  };
+
+  // Add resize observer to handle parent scaling
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(entries => {
+        initCanvas();
+    });
+    
+    resizeObserver.observe(canvasRef.current.parentElement);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let lastTouch = null;
+    let points = [];
+
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      lastTouch = {
+        x: touch.clientX,
+        y: touch.clientY,
+        timestamp: Date.now()
+      };
+      const pos = getDrawingPosition(touch);
+      startDrawing(pos);
+    };
+
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const currentPos = {
+        x: touch.clientX,
+        y: touch.clientY,
+        timestamp: Date.now()
+      };
+      
+      // Add interpolation for smoother lines
+      if (lastTouch) {
+        const distance = Math.hypot(
+          currentPos.x - lastTouch.x,
+          currentPos.y - lastTouch.y
+        );
+        
+        if (distance > 2) {
+          const steps = Math.ceil(distance / 2);
+          for (let i = 0; i < steps; i++) {
+            const ratio = i / steps;
+            const x = lastTouch.x + (currentPos.x - lastTouch.x) * ratio;
+            const y = lastTouch.y + (currentPos.y - lastTouch.y) * ratio;
+            points.push(getDrawingPosition({ clientX: x, clientY: y }));
+          }
+        }
+      }
+      
+      lastTouch = currentPos;
+      drawSmoothPath();
+    };
+
+    const handleTouchEnd = () => {
+      points = [];
+      endDrawing();
+    };
+
+    // Add proper touch listeners
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('touchcancel', handleTouchEnd);
+
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+      canvas.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, []);
+
+  const drawSmoothPath = () => {
+    if (points.length < 2) return;
+    
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.beginPath();
+    
+    // Average last 3 points for smoother lines
+    const avgPoint = (index) => {
+      const slice = points.slice(Math.max(0, index - 1), index + 2);
+      return {
+        x: slice.reduce((sum, p) => sum + p.x, 0) / slice.length,
+        y: slice.reduce((sum, p) => sum + p.y, 0) / slice.length
+      };
+    };
+
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      const p1 = avgPoint(i - 1);
+      const p2 = avgPoint(i);
+      ctx.quadraticCurveTo(p1.x, p1.y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+    }
+    
+    ctx.stroke();
   };
 
   return (
