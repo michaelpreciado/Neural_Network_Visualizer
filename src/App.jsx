@@ -21,37 +21,52 @@ const GlobalStyle = createGlobalStyle`
 
 const TitleContainer = styled.div`
   position: fixed;
-  top: 20px;
+  top: 0;
   left: 0;
   right: 0;
   text-align: center;
   z-index: 2;
   pointer-events: none;
+  padding: 20px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+  backdrop-filter: blur(5px);
 
   @media (max-width: 768px) {
-    top: 10px;
+    padding: 10px;
   }
 `;
 
 const Title = styled.h1`
   color: rgba(0, 255, 255, 0.9);
-  font-size: min(24px, 6vw);
+  font-size: min(32px, 7vw);
   font-weight: 300;
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-  margin-bottom: 10px;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
 
   @media (max-width: 768px) {
+    font-size: min(24px, 6vw);
+  }
+
+  @media (max-width: 480px) {
     font-size: min(20px, 5vw);
-    margin-bottom: 5px;
   }
 `;
 
 const Subtitle = styled.p`
   color: rgba(0, 255, 255, 0.7);
-  font-size: min(16px, 4.5vw);
+  font-size: min(18px, 4vw);
+  margin: 5px 0 0 0;
+  padding: 0;
+  line-height: 1.2;
 
   @media (max-width: 768px) {
-    font-size: min(14px, 4vw);
+    font-size: min(14px, 3.5vw);
+  }
+
+  @media (max-width: 480px) {
+    font-size: min(12px, 3vw);
   }
 `;
 
