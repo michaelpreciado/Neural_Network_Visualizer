@@ -2,74 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neural Network Number Recognition</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="scanline"></div>
     <div class="terminal-overlay"></div>
     
+    <canvas id="visualization"></canvas>
+    
     <div id="info">
-        <h1>Neural Network Recognition</h1>
-        <p class="terminal-text">Draw a number (0-9) below</p>
+        <h1 class="terminal-text">Neural Network Number Recognition</h1>
+        <p>Draw a number (0-100) to see the network process it</p>
     </div>
 
     <div id="loading-container">
         <div class="loading-bar">
             <div class="loading-progress"></div>
         </div>
-        <div class="loading-text">Processing Input...</div>
-        <div class="loading-details"></div>
+        <div class="loading-text terminal-text">Processing Input...</div>
+        <div class="loading-details">Analyzing neural patterns</div>
     </div>
 
-    <div id="drawing-container">
-        <div class="canvas-wrapper">
-            <canvas id="drawing-canvas" width="280" height="280"></canvas>
-            <div class="canvas-overlay"></div>
-        </div>
-        <div class="controls">
-            <button id="clear-canvas" class="terminal-button">
-                <span class="button-text">Clear</span>
-                <div class="button-glow"></div>
-            </button>
-            <button id="recognize" class="terminal-button">
-                <span class="button-text">Recognize</span>
-                <div class="button-glow"></div>
-            </button>
-        </div>
-    </div>
-
-    <div id="output-display">
-        <div class="prediction-container">
-            <div id="prediction">Prediction: <span id="predicted-number">-</span></div>
-            <div class="confidence-bar">
-                <div id="confidence-progress"></div>
+    <div class="interface-container">
+        <div id="drawing-container">
+            <div class="canvas-wrapper">
+                <canvas id="drawing-canvas"></canvas>
             </div>
-            <div id="confidence">Confidence: <span id="confidence-value">0</span>%</div>
+            <div class="controls">
+                <button class="terminal-button" id="clear-canvas">Clear</button>
+                <button class="terminal-button" id="recognize">Recognize</button>
+            </div>
+        </div>
+
+        <div id="output-display">
+            <div class="prediction-container">
+                <div id="prediction" class="terminal-text">Draw a number to begin</div>
+                <div class="confidence-bar">
+                    <div id="confidence-progress"></div>
+                </div>
+                <div id="confidence">Confidence: --</div>
+            </div>
         </div>
     </div>
-
-    <canvas id="visualization"></canvas>
 
     <div class="network-stats">
         <div class="stat">
-            <span class="stat-label">Input Nodes:</span>
-            <span class="stat-value">64</span>
+            <span class="stat-label">Input Layer:</span>
+            <span class="stat-value">64 nodes</span>
         </div>
         <div class="stat">
-            <span class="stat-label">Hidden Layers:</span>
-            <span class="stat-value">2</span>
+            <span class="stat-label">Hidden Layer 1:</span>
+            <span class="stat-value">128 nodes (Feature Extraction)</span>
         </div>
         <div class="stat">
-            <span class="stat-label">Output Nodes:</span>
-            <span class="stat-value">10</span>
+            <span class="stat-label">Hidden Layer 2:</span>
+            <span class="stat-value">256 nodes (Pattern Recognition)</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Hidden Layer 3:</span>
+            <span class="stat-value">512 nodes (Higher-level Features)</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Hidden Layer 4:</span>
+            <span class="stat-value">256 nodes (Feature Combination)</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Hidden Layer 5:</span>
+            <span class="stat-value">128 nodes (Feature Refinement)</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Hidden Layer 6:</span>
+            <span class="stat-value">64 nodes (Dimensionality Reduction)</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Output Layer:</span>
+            <span class="stat-value">101 nodes (0-100)</span>
         </div>
     </div>
 
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "/node_modules/three/build/three.module.js",
+            "three/examples/jsm/controls/OrbitControls": "/node_modules/three/examples/jsm/controls/OrbitControls.js",
+            "gsap": "/node_modules/gsap/index.js"
+        }
+    }
+    </script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html> 
