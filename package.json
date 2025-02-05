@@ -1,13 +1,18 @@
 {
-    "name": "neural-network-visualizer",
-    "version": "1.0.0",
-    "type": "module",
-    "description": "A 3D visualization of neural networks using Three.js",
-    "main": "network.js",
-    "dependencies": {
-        "three": "^0.162.0"
-    },
-    "scripts": {
-        "start": "python3 -m http.server 8000"
-    }
+  "name": "neural-network-visualizer",
+  "version": "1.0.0",
+  "description": "A beautiful 3D neural network visualization using Three.js",
+  "main": "index.html",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.161.0",
+    "gsap": "^3.12.5"
+  },
+  "devDependencies": {
+    "vite": "^5.0.12"
+  }
 } 
