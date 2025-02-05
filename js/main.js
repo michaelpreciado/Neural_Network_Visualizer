@@ -324,10 +324,24 @@ class NeuralNetworkVisualizer {
         this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
 
         // Touch events
-        this.canvas.addEventListener('touchstart', this.startDrawing.bind(this));
-        this.canvas.addEventListener('touchmove', this.draw.bind(this));
-        this.canvas.addEventListener('touchend', this.stopDrawing.bind(this));
-        this.canvas.addEventListener('touchcancel', this.stopDrawing.bind(this));
+        const handleTouch = (e) => {
+            e.preventDefault();
+            const touches = e.touches;
+            
+            // Single touch - rotate
+            if (touches.length === 1) {
+                // Update camera rotation
+            }
+            
+            // Two touches - zoom
+            if (touches.length === 2) {
+                // Handle pinch zoom
+            }
+        };
+
+        this.canvas.addEventListener('touchstart', handleTouch);
+        this.canvas.addEventListener('touchmove', handleTouch);
+        this.canvas.addEventListener('touchend', handleTouch);
 
         // Button events
         document.getElementById('clear-canvas').addEventListener('click', this.clearCanvas.bind(this));
@@ -715,9 +729,63 @@ class NeuralNetworkVisualizer {
 
         this.renderer.render(this.scene, this.camera);
     }
+
+    // Add visibility change listener
+    visibilityChange() {
+        if (document.visibilityState === 'hidden') {
+            this.renderer.dispose();
+            this.scene.traverse(obj => {
+                if (obj.material) {
+                    obj.material.dispose();
+                }
+                if (obj.geometry) {
+                    obj.geometry.dispose();
+                }
+            });
+        } else {
+            this.initThreeJS();
+        }
+    }
 }
 
 // Initialize the visualizer when the page loads
 window.addEventListener('load', () => {
     new NeuralNetworkVisualizer();
-}); 
+});
+
+const handleResize = () => {
+    const isMobile = window.innerWidth <= 768;
+    const canvasWrapper = document.querySelector('.canvas-wrapper');
+    
+    if (isMobile) {
+        canvasWrapper.style.transform = 'scale(0.9)';
+        canvasWrapper.style.margin = '-5px 0';
+    } else {
+        canvasWrapper.style.transform = 'scale(1)';
+        canvasWrapper.style.margin = '0';
+    }
+};
+
+// Initial call
+handleResize();
+
+// Add resize listener
+window.addEventListener('resize', handleResize);
+
+const updateVisualizerSize = () => {
+    const visualizer = document.getElementById('visualization');
+    const isMobile = window.innerWidth <= 768;
+    
+    if(isMobile) {
+        visualizer.style.width = `${Math.min(400, window.innerWidth * 0.9)}px`;
+        visualizer.style.height = `${Math.min(400, window.innerHeight * 0.5)}px`;
+        visualizer.style.transition = 'all 0.3s ease';
+    } else {
+        visualizer.style.width = '100%';
+        visualizer.style.height = '100vh';
+    }
+};
+
+// Run on resize and initial load
+window.addEventListener('resize', updateVisualizerSize);
+updateVisualizerSize(); 

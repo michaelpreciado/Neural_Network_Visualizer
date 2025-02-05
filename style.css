@@ -26,6 +26,8 @@ body {
     color: var(--primary-cyan);
     display: flex;
     flex-direction: column;
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Terminal Effects */
@@ -64,24 +66,32 @@ body {
 
 #visualization {
     position: fixed;
-    top: -20vh;
+    top: env(safe-area-inset-top, 15px);
     left: 0;
     width: 100%;
-    height: 120vh;
+    height: 50vh;
     z-index: 1;
     touch-action: none;
+    transform: none;
+    will-change: transform, opacity;
 }
 
 #info {
     position: fixed;
-    top: env(safe-area-inset-top, 20px);
-    left: 20px;
+    top: env(safe-area-inset-top, 10px);
+    left: 10px;
     color: var(--primary-cyan-bright);
     z-index: 2;
     pointer-events: none;
     text-shadow: var(--glow-shadow);
     padding: 10px;
-    max-width: 300px;
+    max-width: 120px;
+    font-size: 10px;
+    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 255, 0.1);
 }
 
 .terminal-text {
@@ -106,12 +116,12 @@ body {
     right: 0;
     z-index: 2;
     display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 20px;
-    padding: 20px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-    min-height: 300px;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+    min-height: auto;
 }
 
 #drawing-container {
@@ -119,20 +129,22 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 8px;
     backdrop-filter: blur(5px);
-    padding: 15px;
+    padding: 10px;
     border-radius: 15px;
     background: rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 300px;
 }
 
 .canvas-wrapper {
     position: relative;
-    width: min(200px, 25vw);
-    height: min(200px, 25vw);
+    width: min(150px, 40vw);
+    height: min(150px, 40vw);
     background: rgba(0, 0, 0, 0.7);
     border-radius: 10px;
-    padding: 15px;
+    padding: 8px;
     border: 1px solid var(--primary-cyan-dim);
     box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
     transition: all 0.3s ease;
@@ -160,7 +172,8 @@ body {
 
 .controls {
     display: flex;
-    gap: 15px;
+    flex-wrap: wrap;
+    gap: 6px;
     width: 100%;
     justify-content: center;
     margin-top: 20px;
@@ -171,16 +184,20 @@ body {
     border: 1px solid var(--primary-cyan-dim);
     color: var(--primary-cyan);
     font-family: var(--terminal-font);
-    padding: 12px 25px;
+    padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-size: 14px;
+    font-size: clamp(10px, 3vw, 14px);
     position: relative;
     overflow: hidden;
-    min-width: 120px;
+    min-width: auto;
+    flex: 1 1 45%;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px !important;
 }
 
 .terminal-button::before {
@@ -219,15 +236,18 @@ body {
     text-align: center;
     padding: 0 20px;
     min-width: 250px;
+    width: 100%;
+    max-width: 300px;
 }
 
 .prediction-container {
     background: rgba(0, 0, 0, 0.7);
     border: 1px solid var(--primary-cyan-dim);
     border-radius: 10px;
-    padding: 15px;
+    padding: 8px;
     display: inline-block;
     width: 100%;
+    font-size: clamp(12px, 4vw, 16px);
 }
 
 .network-stats {
@@ -287,7 +307,7 @@ body {
 
 .confidence-bar {
     width: 100%;
-    height: 4px;
+    height: 3px;
     background: rgba(0, 255, 255, 0.1);
     border-radius: 2px;
     margin: 10px 0;
@@ -343,8 +363,25 @@ p {
 /* Responsive adjustments */
 @media (max-width: 768px) {
     #visualization {
-        top: -30vh;
-        height: 130vh;
+        position: fixed;
+        top: 50% !important;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90vw;
+        height: 50vh;
+        scale: 0.9;
+    }
+
+    .neural-network-container {
+        perspective: 800px;
+        transform-style: preserve-3d;
+    }
+
+    /* Adjust camera position for mobile */
+    .camera-controls {
+        bottom: 15px;
+        right: 15px;
+        transform: scale(0.8);
     }
 
     .interface-container {
@@ -371,11 +408,11 @@ p {
     }
 
     #info {
-        text-align: center;
         left: 50%;
         transform: translateX(-50%);
+        top: 120px;
         width: 90%;
-        max-width: none;
+        text-align: center;
     }
 
     .controls {
@@ -386,6 +423,97 @@ p {
     .terminal-button {
         min-width: 110px;
         padding: 12px 20px;
+    }
+
+    .interface-container {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .canvas-wrapper {
+        width: min(120px, 35vw) !important;
+        height: min(120px, 35vw) !important;
+        padding: 5px;
+        border-width: 0.5px;
+    }
+
+    #drawing-container {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .terminal-button {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        min-width: 60px;
+        letter-spacing: 0.5px;
+        border-width: 0.5px;
+    }
+
+    .controls {
+        gap: 4px;
+        margin-top: 4px;
+    }
+
+    #output-display {
+        max-width: 200px;
+        padding: 6px;
+    }
+
+    .prediction-container {
+        font-size: 0.8rem;
+        padding: 6px;
+    }
+
+    Title {
+        font-size: 1rem;
+        padding: 8px 15px;
+        top: env(safe-area-inset-top, 8px);
+    }
+
+    .neural-node {
+        transform: scale(0.8);
+    }
+    
+    .neural-connection {
+        stroke-width: 1.2;
+    }
+    
+    .tensor-space {
+        scale: 0.7;
+    }
+}
+
+/* Smaller phones landscape */
+@media (max-width: 480px) and (orientation: landscape) {
+    #visualization {
+        width: 70vw;
+        height: 70vh;
+        top: 55% !important;
+    }
+    
+    Title {
+        font-size: 1rem;
+        padding: 8px 15px;
+        top: env(safe-area-inset-top, 8px);
+    }
+}
+
+/* Ultra-compact for very small screens */
+@media (max-width: 480px) {
+    .canvas-wrapper {
+        width: min(100px, 30vw) !important;
+        height: min(100px, 30vw) !important;
+    }
+
+    .terminal-button {
+        font-size: 0.6rem;
+        padding: 3px 6px;
+        min-width: 50px;
+    }
+
+    #output-display {
+        max-width: 180px;
     }
 }
 
@@ -431,5 +559,98 @@ p {
     .prediction-container {
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
+    }
+}
+
+/* Title styling */
+Title {
+    position: fixed;
+    top: env(safe-area-inset-top, 15px);
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+    font-size: 1.2rem;
+    white-space: nowrap;
+    z-index: 3;
+}
+
+/* Mobile visualizer adjustments */
+@media (max-width: 768px) {
+    #visualization {
+        position: fixed;
+        top: 50% !important;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90vw;
+        height: 50vh;
+        scale: 0.9;
+    }
+
+    .neural-network-container {
+        perspective: 800px;
+        transform-style: preserve-3d;
+    }
+
+    /* Adjust camera position for mobile */
+    .camera-controls {
+        bottom: 15px;
+        right: 15px;
+        transform: scale(0.8);
+    }
+}
+
+/* Smaller phones landscape */
+@media (max-width: 480px) and (orientation: landscape) {
+    #visualization {
+        width: 70vw;
+        height: 70vh;
+        top: 55% !important;
+    }
+    
+    Title {
+        font-size: 1rem;
+        padding: 8px 15px;
+        top: env(safe-area-inset-top, 8px);
+    }
+}
+
+/* Camera controls for mobile */
+@media (max-width: 480px) {
+    .camera-controls {
+        bottom: 10px;
+        right: 10px;
+        scale: 0.8;
+    }
+    
+    .camera-button {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+}
+
+/* Landscape orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+    #visualization {
+        width: 60vh !important;
+        height: 60vh !important;
+        top: 55% !important;
+    }
+    
+    .interface-container {
+        flex-direction: row;
+        justify-content: space-evenly;
+        padding-top: 5px;
+    }
+    
+    .canvas-wrapper {
+        width: 25vh !important;
+        height: 25vh !important;
     }
 } 

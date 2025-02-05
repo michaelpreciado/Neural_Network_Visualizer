@@ -9,7 +9,7 @@ const NetworkContainer = styled.div`
   left: 0;
   width: 100%;
   height: 70vh;
-  transform: translateY(-50%);
+  transform: translateY(-65%);
   z-index: 1;
   display: flex;
   justify-content: center;
@@ -18,7 +18,7 @@ const NetworkContainer = styled.div`
 
   @media (max-width: 768px) {
     height: 60vh;
-    transform: translateY(-50%);
+    transform: translateY(-75%);
   }
 `;
 

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { modelService } from '../services/modelService';
 
 const DrawingContainer = styled.div`
   position: fixed;
@@ -150,11 +151,22 @@ const StyledCanvas = styled.canvas`
   border-radius: 6px;
 `;
 
-const DrawingCanvas = ({ onRecognize }) => {
+const AlternativePredictions = styled.div`
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 4px;
+  
+  @media (max-width: 768px) {
+    font-size: 8px;
+  }
+`;
+
+const DrawingCanvas = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [confidence, setConfidence] = useState(0);
+  const [alternatives, setAlternatives] = useState([]);
   const lastPos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -246,6 +258,7 @@ const DrawingCanvas = ({ onRecognize }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setPrediction(null);
     setConfidence(0);
+    setAlternatives([]);
   };
 
   const preprocessCanvas = () => {
@@ -336,33 +349,24 @@ const DrawingCanvas = ({ onRecognize }) => {
   };
 
   const handleRecognize = async () => {
-    // Center the drawing first
-    centerDrawing();
-    
-    // Preprocess the canvas data
-    const input = preprocessCanvas();
-    
     try {
-      // Make prediction
-      const response = await fetch('/api/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ input: Array.from(input) })
-      });
+      // Center the drawing first
+      centerDrawing();
       
-      if (!response.ok) throw new Error('Prediction failed');
+      // Preprocess the canvas data
+      const input = preprocessCanvas();
       
-      const result = await response.json();
+      // Get prediction from AI model
+      const result = await modelService.predict(input);
+      
       setPrediction(result.prediction);
       setConfidence(result.confidence);
+      setAlternatives(result.alternatives);
     } catch (error) {
       console.error('Prediction error:', error);
-      // Fallback to random prediction for now
-      const randomPrediction = Math.floor(Math.random() * 101);
-      setPrediction(randomPrediction);
-      setConfidence(85);
+      setPrediction(null);
+      setConfidence(0);
+      setAlternatives([]);
     }
   };
 
@@ -394,6 +398,13 @@ const DrawingCanvas = ({ onRecognize }) => {
           <ConfidenceProgress $confidence={confidence} />
         </ConfidenceBar>
         <div>{confidence}%</div>
+        {alternatives.length > 0 && (
+          <AlternativePredictions>
+            Also could be: {alternatives.map(alt => 
+              `${alt.digit} (${alt.confidence}%)`
+            ).join(', ')}
+          </AlternativePredictions>
+        )}
       </PredictionDisplay>
     </DrawingContainer>
   );

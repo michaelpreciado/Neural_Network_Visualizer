@@ -19,26 +19,27 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const Title = styled.h1`
+const TitleContainer = styled.div`
   position: fixed;
   top: 20px;
-  left: 20px;
-  color: rgba(0, 255, 255, 0.9);
-  font-size: min(24px, 6vw);
-  font-weight: 300;
+  left: 0;
+  right: 0;
+  text-align: center;
   z-index: 2;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
   pointer-events: none;
 `;
 
+const Title = styled.h1`
+  color: rgba(0, 255, 255, 0.9);
+  font-size: min(24px, 6vw);
+  font-weight: 300;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  margin-bottom: 10px;
+`;
+
 const Subtitle = styled.p`
-  position: fixed;
-  top: 60px;
-  left: 20px;
   color: rgba(0, 255, 255, 0.7);
   font-size: min(16px, 4.5vw);
-  z-index: 2;
-  pointer-events: none;
 `;
 
 const NetworkStats = styled.div`
@@ -75,8 +76,10 @@ const App = () => {
   return (
     <>
       <GlobalStyle />
-      <Title>Neural Network Number Recognition</Title>
-      <Subtitle>Draw a number (0-100) to see the network process it</Subtitle>
+      <TitleContainer>
+        <Title>Neural Network Number Recognition</Title>
+        <Subtitle>Draw a number (0-100) to see the network process it</Subtitle>
+      </TitleContainer>
       
       <NetworkStats>
         <StatItem>Input Layer: 64 nodes</StatItem>
