@@ -1,15 +1,17 @@
 {
   "name": "neural-network-visualizer",
+  "private": true,
   "version": "1.0.0",
-  "description": "Neural Network Number Recognition Visualizer",
+  "type": "module",
+  "homepage": "https://michaelpreciado.github.io/Neural_Network_Visualizer/",
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "vite",
+    "start": "concurrently \"npm run server\" \"npm run dev\"",
     "server": "node src/server/server.js",
-    "client": "vite",
     "build": "vite build",
-    "train": "node src/server/trainModel.js",
-    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.17.0",
@@ -19,10 +21,11 @@
     "express": "^4.18.2",
     "gsap": "^3.12.5",
     "mnist": "^1.1.0",
-     "react": "^18.2.0",
+    "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^6.1.8",
-    "three": "^0.161.0"
+    "three": "^0.161.0",
+    "concurrently": "^8.2.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -32,6 +35,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "gh-pages": "^6.1.1",
     "vite": "^5.0.8"
   }
 }
