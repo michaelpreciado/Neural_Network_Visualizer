@@ -1,14 +1,412 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/svg+xml" href="/neural.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Neural Network Number Recognition</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <!-- Ensure proper scaling on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive 3D Neural Network Digit Recognizer</title>
+  <style>
+    /* Basic resets and styling */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #222;
+      color: #eee;
+      font-family: sans-serif;
+    }
+    /* Container for the Three.js scene */
+    #threejs-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      /* Reserve the bottom 40% for the drawing canvas */
+      bottom: 40%;
+      overflow: hidden;
+    }
+    /* Container for drawing canvas and controls */
+    #canvas-container {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 40%;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    /* The drawing canvas – white strokes on black background */
+    #drawCanvas {
+      background: black;
+      border: 2px solid #444;
+      border-radius: 8px;
+      touch-action: none; /* Prevent scrolling while drawing */
+    }
+    /* Controls styling */
+    #controls {
+      margin-top: 5px;
+    }
+    button {
+      background: #444;
+      color: #eee;
+      border: none;
+      padding: 10px 15px;
+      margin: 0 5px;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    button:hover {
+      background: #666;
+      cursor: pointer;
+    }
+    #predictionResult {
+      margin-top: 5px;
+      font-size: 1.2em;
+    }
+  </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+  <!-- Three.js scene container -->
+  <div id="threejs-container"></div>
+
+  <!-- Drawing canvas and controls -->
+  <div id="canvas-container">
+    <canvas id="drawCanvas"></canvas>
+    <div id="controls">
+      <button id="clearButton">Clear</button>
+      <button id="predictButton" disabled>Predict</button>
+    </div>
+    <div id="predictionResult"></div>
+  </div>
+
+  <!-- Load Three.js and OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Load TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+
+  <script>
+    /***********************
+     * 3D Neural Network Visualization Setup
+     ***********************/
+    let scene, camera, renderer, controls;
+    let inputNeurons = [], hiddenNeurons = [], outputNeurons = [];
+    const originalColor = 0xaaaaaa;
+    const activeColor = 0x00ffff;
+    const finalColor = 0x00ff00; // predicted node
+    const inactiveColor = 0xff4444; // non-selected output nodes
+
+    // Initialize Three.js scene, camera, renderer, and controls
+    function initThreeJS() {
+      const container = document.getElementById('threejs-container');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000); // Pure black background
+      
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera.position.set(30, 20, 30);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(width, height);
+      container.appendChild(renderer.domElement);
+
+      // OrbitControls with damping for smoother movement
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.5;
+
+      // Add ambient and point lights for better atmosphere
+      const ambientLight = new THREE.AmbientLight(0x111111);
+      scene.add(ambientLight);
+
+      const pointLight1 = new THREE.PointLight(0x3366ff, 0.5);
+      pointLight1.position.set(50, 50, 50);
+      scene.add(pointLight1);
+
+      const pointLight2 = new THREE.PointLight(0xff3366, 0.5);
+      pointLight2.position.set(-50, -50, -50);
+      scene.add(pointLight2);
+
+      // Create the network visualization
+      createNeuralNetworkVisualization();
+
+      window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('threejs-container');
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    // Create a simplified neural network with three layers:
+    // Input: 4 nodes, Hidden: 6 nodes, Output: 10 nodes
+    function createNeuralNetworkVisualization() {
+      const neuronGeometry = new THREE.SphereGeometry(0.8, 32, 32);
+      const neuronMaterial = new THREE.MeshPhongMaterial({ 
+        color: originalColor,
+        shininess: 100,
+        emissive: 0x222222
+      });
+
+      // Helper to create a layer of neurons
+      function createLayer(numNeurons, xPos) {
+        const layer = [];
+        const spacing = 4;
+        const startY = -((numNeurons - 1) * spacing) / 2;
+        for (let i = 0; i < numNeurons; i++) {
+          const neuron = new THREE.Mesh(neuronGeometry, neuronMaterial.clone());
+          neuron.position.set(xPos, startY + i * spacing, 0);
+          scene.add(neuron);
+          layer.push(neuron);
+        }
+        return layer;
+      }
+
+      inputNeurons = createLayer(4, -20);
+      hiddenNeurons = createLayer(6, 0);
+      outputNeurons = createLayer(10, 20);
+
+      // Create animated connections between layers
+      function createAnimatedConnections(layerA, layerB) {
+        layerA.forEach(a => {
+          layerB.forEach(b => {
+            const numParticles = 5;
+            const points = [];
+            for (let i = 0; i < numParticles; i++) {
+              points.push(new THREE.Vector3());
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(numParticles * 3);
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+              color: 0x4444ff,
+              size: 0.3,
+              transparent: true,
+              opacity: 0.6
+            });
+            
+            const particles = new THREE.Points(geometry, material);
+            particles.userData = {
+              startPos: a.position.clone(),
+              endPos: b.position.clone(),
+              points: points,
+              speed: 0.6 + Math.random() * 0.4
+            };
+            
+            scene.add(particles);
+          });
+        });
+      }
+
+      createAnimatedConnections(inputNeurons, hiddenNeurons);
+      createAnimatedConnections(hiddenNeurons, outputNeurons);
+    }
+
+    // Update the animation loop to include particle animations
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // Update particle positions
+      scene.children.forEach(child => {
+        if (child instanceof THREE.Points) {
+          const positions = child.geometry.attributes.position.array;
+          const userData = child.userData;
+          
+          for (let i = 0; i < positions.length; i += 3) {
+            const t = ((Date.now() * userData.speed) % 2000) / 2000;
+            const particleIndex = i / 3;
+            const particleT = (t + (particleIndex / (positions.length / 3))) % 1;
+            
+            positions[i] = userData.startPos.x + (userData.endPos.x - userData.startPos.x) * particleT;
+            positions[i + 1] = userData.startPos.y + (userData.endPos.y - userData.startPos.y) * particleT;
+            positions[i + 2] = userData.startPos.z + (userData.endPos.z - userData.startPos.z) * particleT;
+          }
+          
+          child.geometry.attributes.position.needsUpdate = true;
+        }
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    /***********************
+     * Drawing Canvas Setup
+     ***********************/
+    const drawCanvas = document.getElementById('drawCanvas');
+    const ctx = drawCanvas.getContext('2d');
+    let isDrawing = false;
+    let lastPos = { x: 0, y: 0 };
+
+    // Resize the canvas to fit its container
+    function resizeDrawingCanvas() {
+      const container = document.getElementById('canvas-container');
+      drawCanvas.width = container.clientWidth - 20;
+      drawCanvas.height = container.clientHeight * 0.6;
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+    }
+    window.addEventListener('resize', resizeDrawingCanvas);
+    resizeDrawingCanvas();
+
+    // Get the pointer position relative to the canvas
+    function getCanvasPos(evt) {
+      const rect = drawCanvas.getBoundingClientRect();
+      return {
+        x: (evt.clientX - rect.left) * (drawCanvas.width / rect.width),
+        y: (evt.clientY - rect.top) * (drawCanvas.height / rect.height)
+      };
+    }
+    drawCanvas.addEventListener('pointerdown', e => {
+      isDrawing = true;
+      lastPos = getCanvasPos(e);
+    });
+    drawCanvas.addEventListener('pointermove', e => {
+      if (!isDrawing) return;
+      const pos = getCanvasPos(e);
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 15;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(lastPos.x, lastPos.y);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      lastPos = pos;
+    });
+    drawCanvas.addEventListener('pointerup', () => { isDrawing = false; });
+    drawCanvas.addEventListener('pointerleave', () => { isDrawing = false; });
+
+    // Clear button functionality
+    document.getElementById('clearButton').addEventListener('click', () => {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+      document.getElementById('predictionResult').innerText = "";
+    });
+
+    /***********************
+     * TensorFlow.js Model Setup
+     ***********************/
+    let model;
+    (async function loadModel() {
+      try {
+        const predictButton = document.getElementById('predictButton');
+        predictButton.disabled = true;
+        document.getElementById('predictionResult').innerText = "Loading model...";
+        
+        // Load MobileNet model which expects [1, 224, 224, 3] input.
+        model = await tf.loadLayersModel("https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json");
+        
+        predictButton.disabled = false;
+        document.getElementById('predictionResult').innerText = "Model loaded. Draw an image and press Predict!";
+      } catch (error) {
+        console.error("Error loading model:", error);
+        document.getElementById('predictionResult').innerText = "Error loading model. Check console for details.";
+        document.getElementById('predictButton').disabled = true;
+      }
+    })();
+
+    /***********************
+     * Prediction and Animation
+     ***********************/
+    document.getElementById('predictButton').addEventListener('click', async () => {
+      if (!model) {
+        alert("Model not loaded yet.");
+        return;
+      }
+      // Preprocess the drawing into a 224x224 RGB tensor.
+      const inputTensor = preprocessCanvas(drawCanvas);
+      console.log("Input tensor shape:", inputTensor.shape); // Should be [1, 224, 224, 3]
+      
+      // Run the prediction.
+      const prediction = model.predict(inputTensor);
+      const predictionArray = await prediction.data();
+      const predictedIndex = predictionArray.indexOf(Math.max(...predictionArray));
+      
+      // Animate the network visualization based on the prediction.
+      await animateActivation(predictedIndex);
+      
+      // Display the result.
+      document.getElementById('predictionResult').innerText = `Prediction: ${predictedIndex}`;
+      
+      // Dispose of tensors to free memory.
+      tf.dispose([inputTensor, prediction]);
+    });
+
+    // Updated preprocessCanvas function:
+    // It scales the drawn image to 224x224, converts it to an RGB tensor, and normalizes pixel values.
+    function preprocessCanvas(canvas) {
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = 224;
+      tempCanvas.height = 224;
+      const tempCtx = tempCanvas.getContext("2d");
+      
+      // Fill with black background.
+      tempCtx.fillStyle = "black";
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Draw the content of the original canvas scaled to 224x224.
+      tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 224, 224);
+      
+      // Convert the drawn image into a tensor.
+      const imgTensor = tf.browser.fromPixels(tempCanvas);
+      
+      // Expand dims to create a batch (shape becomes [1,224,224,3]), convert to float, and normalize.
+      return imgTensor.expandDims(0).toFloat().div(tf.scalar(255));
+    }
+
+    // Animate the neural network activation for each layer sequentially.
+    async function animateActivation(predictedIndex) {
+      function setLayerColor(neuronArray, color) {
+        neuronArray.forEach(neuron => neuron.material.color.setHex(color));
+      }
+      
+      // Activate input layer.
+      setLayerColor(inputNeurons, activeColor);
+      await sleep(500);
+      
+      // Activate hidden layer.
+      setLayerColor(hiddenNeurons, activeColor);
+      await sleep(500);
+      
+      // Activate output layer: highlight the predicted neuron in green, others in red.
+      outputNeurons.forEach((neuron, idx) => {
+        if (idx === predictedIndex) {
+          neuron.material.color.setHex(finalColor);
+        } else {
+          neuron.material.color.setHex(inactiveColor);
+        }
+      });
+      await sleep(1000);
+      
+      // Reset all neurons to their original color.
+      setLayerColor(inputNeurons, originalColor);
+      setLayerColor(hiddenNeurons, originalColor);
+      setLayerColor(outputNeurons, originalColor);
+    }
+
+    // Utility sleep function for animation timing.
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /***********************
+     * Start Everything
+     ***********************/
+    initThreeJS();
+    animate();
+  </script>
 </body>
-</html> 
+</html>
