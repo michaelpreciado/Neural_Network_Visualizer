@@ -2,85 +2,253 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Ensure proper scaling on mobile devices -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interactive 3D Neural Network Digit Recognizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Neural Network Digit Recognizer - Cyberpunk Edition</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
-    /* Basic resets and styling */
+    /* Cyberpunk theme styling */
     html, body {
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      background-color: #222;
-      color: #eee;
-      font-family: sans-serif;
+      background-color: #0a0a1f;
+      color: #00ffff;
+      font-family: 'Share Tech Mono', Consolas, monospace;
+      height: 100%;
+      width: 100%;
+      overflow-x: hidden; /* Prevent horizontal scrolling */
+      -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
     }
-    /* Container for the Three.js scene */
-    #threejs-container {
-      position: absolute;
+
+    /* Mobile detection */
+    .mobile-notice {
+      display: none;
+      position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      /* Reserve the bottom 40% for the drawing canvas */
-      bottom: 40%;
-      overflow: hidden;
+      background: #001133;
+      color: #00ffff;
+      padding: 10px;
+      text-align: center;
+      z-index: 1000;
+      font-size: 0.8em;
     }
-    /* Container for drawing canvas and controls */
-    #canvas-container {
-      position: absolute;
+
+    /* Container layouts */
+    .layout-container {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative; /* For proper stacking context */
+    }
+
+    /* Matrix rain effect */
+    .matrix-bg {
+      position: fixed; /* Keep background fixed while content scrolls */
+      top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      height: 40%;
-      background: #111;
+      pointer-events: none;
+      opacity: 0.1;
+      z-index: -1;
+    }
+
+    /* Container for the Three.js scene */
+    #threejs-container {
+      flex: 1;
+      position: relative;
+      min-height: 60vh; /* Ensure minimum height on mobile */
+      overflow: hidden;
+      border-bottom: 2px solid #00ffff33;
+      box-shadow: 0 0 20px #00ffff22;
+    }
+
+    /* Container for drawing canvas and controls */
+    #canvas-container {
+      position: relative;
+      min-height: 40vh;
+      background: #0a0a1f;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 5px;
+      padding: 10px;
       box-sizing: border-box;
     }
-    /* The drawing canvas – white strokes on black background */
+
+    /* The drawing canvas */
     #drawCanvas {
-      background: black;
-      border: 2px solid #444;
-      border-radius: 8px;
-      touch-action: none; /* Prevent scrolling while drawing */
+      background: #000011;
+      border: 2px solid #00ffff44;
+      border-radius: 4px;
+      touch-action: none;
+      box-shadow: 0 0 15px #00ffff22;
+      max-width: 100%;
+      max-height: 70%;
     }
+
     /* Controls styling */
     #controls {
-      margin-top: 5px;
+      width: 100%;
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      padding: 0 20px;
+      box-sizing: border-box;
+      flex-wrap: wrap;
     }
-    button {
-      background: #444;
-      color: #eee;
-      border: none;
-      padding: 10px 15px;
-      margin: 0 5px;
-      border-radius: 5px;
+
+    .save-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #correctLabel {
+      width: 80px;
+      padding: 12px;
+      background: #001133;
+      color: #00ffff;
+      border: 1px solid #00ffff55;
+      border-radius: 8px;
+      font-family: 'Share Tech Mono', Consolas, monospace;
       font-size: 1em;
     }
-    button:hover {
-      background: #666;
-      cursor: pointer;
+
+    #trainingStatus {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #00ffff88;
     }
+
+    button {
+      flex: 1;
+      max-width: 150px;
+      background: #001133;
+      color: #00ffff;
+      border: 1px solid #00ffff55;
+      padding: 15px 20px;
+      font-family: 'Share Tech Mono', Consolas, monospace;
+      font-size: 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active {
+      background: #002266;
+      transform: scale(0.95);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     #predictionResult {
-      margin-top: 5px;
+      margin-top: 15px;
       font-size: 1.2em;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff55;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+      .mobile-notice {
+        display: block;
+      }
+
+      #threejs-container {
+        min-height: 50vh;
+      }
+
+      #canvas-container {
+        min-height: 50vh;
+      }
+
+      #controls {
+        padding: 0 10px;
+      }
+
+      button {
+        padding: 12px 15px;
+        font-size: 0.9em;
+      }
+
+      #predictionResult {
+        font-size: 1em;
+      }
+    }
+
+    /* iPhone-specific styles */
+    @media (max-width: 428px) {
+      #threejs-container {
+        min-height: 40vh;
+      }
+
+      #canvas-container {
+        min-height: 60vh;
+      }
+
+      button {
+        padding: 10px;
+        font-size: 0.8em;
+      }
+    }
+
+    /* Landscape orientation warning */
+    @media (max-width: 928px) and (orientation: landscape) {
+      .landscape-warning {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #0a0a1f;
+        color: #00ffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        text-align: center;
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Three.js scene container -->
-  <div id="threejs-container"></div>
-
-  <!-- Drawing canvas and controls -->
-  <div id="canvas-container">
-    <canvas id="drawCanvas"></canvas>
-    <div id="controls">
-      <button id="clearButton">Clear</button>
-      <button id="predictButton" disabled>Predict</button>
+  <div class="mobile-notice">
+    For best experience, use in portrait mode
+  </div>
+  <div class="landscape-warning" style="display: none;">
+    <div>
+      Please rotate your device to portrait mode<br>
+      🔄
     </div>
-    <div id="predictionResult"></div>
+  </div>
+  <div class="layout-container">
+    <canvas class="matrix-bg" id="matrixBg"></canvas>
+    <div id="threejs-container"></div>
+    <div id="canvas-container">
+      <canvas id="drawCanvas"></canvas>
+      <div id="controls">
+        <button id="clearButton">Clear</button>
+        <button id="predictButton" disabled>Predict</button>
+        <div class="save-controls">
+          <input type="number" id="correctLabel" min="0" max="9" placeholder="Correct digit (0-9)" />
+          <button id="saveButton">Save Example</button>
+        </div>
+      </div>
+      <div id="predictionResult"></div>
+      <div id="trainingStatus"></div>
+    </div>
   </div>
 
   <!-- Load Three.js and OrbitControls -->
@@ -94,49 +262,76 @@
      * 3D Neural Network Visualization Setup
      ***********************/
     let scene, camera, renderer, controls;
-    let inputNeurons = [], hiddenNeurons = [], outputNeurons = [];
-    const originalColor = 0xaaaaaa;
+    let inputLayer, conv1Layer, pool1Layer, conv2Layer, pool2Layer, flattenedLayer, outputLayer;
+    let convKernel;
+    const originalColor = 0x0a1a2f;
     const activeColor = 0x00ffff;
-    const finalColor = 0x00ff00; // predicted node
-    const inactiveColor = 0xff4444; // non-selected output nodes
+    const finalColor = 0x00ff00;
+    const inactiveColor = 0xff4444;
+    const highlightColor = 0x00ff88;
+
+    // Add mobile detection and orientation handling
+    function handleOrientation() {
+      const warning = document.querySelector('.landscape-warning');
+      if (window.innerWidth <= 928 && window.innerWidth > window.innerHeight) {
+        warning.style.display = 'flex';
+      } else {
+        warning.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('resize', handleOrientation);
+    window.addEventListener('orientationchange', handleOrientation);
+    handleOrientation();
 
     // Initialize Three.js scene, camera, renderer, and controls
     function initThreeJS() {
       const container = document.getElementById('threejs-container');
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x000000); // Pure black background
+      scene.background = new THREE.Color(0x0a0a1f);
       
       const width = container.clientWidth;
       const height = container.clientHeight;
-      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-      camera.position.set(30, 20, 30);
+      camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+      // Position camera for better overview
+      camera.position.set(20, 15, 40);
+      camera.lookAt(0, 0, 0);
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(width, height);
+      renderer.setClearColor(0x0a0a1f);
       container.appendChild(renderer.domElement);
 
-      // OrbitControls with damping for smoother movement
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
-      controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.5;
+      controls.autoRotate = false; // Disable auto-rotation
+      controls.minDistance = 20;
+      controls.maxDistance = 100;
+      controls.maxPolarAngle = Math.PI / 1.5; // Limit vertical rotation
 
-      // Add ambient and point lights for better atmosphere
-      const ambientLight = new THREE.AmbientLight(0x111111);
+      // Enhanced lighting for better visibility
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
       scene.add(ambientLight);
 
-      const pointLight1 = new THREE.PointLight(0x3366ff, 0.5);
-      pointLight1.position.set(50, 50, 50);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
+
+      const pointLight1 = new THREE.PointLight(0x00ffff, 1);
+      pointLight1.position.set(10, 10, 10);
       scene.add(pointLight1);
 
-      const pointLight2 = new THREE.PointLight(0xff3366, 0.5);
-      pointLight2.position.set(-50, -50, -50);
+      const pointLight2 = new THREE.PointLight(0x0088ff, 1);
+      pointLight2.position.set(-10, -10, 10);
       scene.add(pointLight2);
 
-      // Create the network visualization
       createNeuralNetworkVisualization();
-
+      createMatrixRainEffect();
+      
+      // Add layer labels
+      addLayerLabels();
+      
       window.addEventListener('resize', onWindowResize, false);
     }
 
@@ -149,98 +344,282 @@
       renderer.setSize(width, height);
     }
 
+    function addLayerLabels() {
+      const labels = [
+        { text: 'Input Layer', position: new THREE.Vector3(-20, 12, -20) },
+        { text: 'Conv1', position: new THREE.Vector3(-15, 12, 0) },
+        { text: 'Pool1', position: new THREE.Vector3(-10, 12, 0) },
+        { text: 'Conv2', position: new THREE.Vector3(-5, 12, 0) },
+        { text: 'Pool2', position: new THREE.Vector3(0, 12, 0) },
+        { text: 'Dense', position: new THREE.Vector3(5, 12, 0) },
+        { text: 'Output', position: new THREE.Vector3(15, 12, 0) }
+      ];
+
+      labels.forEach(label => {
+        const text = createText(label.text, 1);
+        text.position.copy(label.position);
+        scene.add(text);
+      });
+    }
+
     // Create a simplified neural network with three layers:
     // Input: 4 nodes, Hidden: 6 nodes, Output: 10 nodes
     function createNeuralNetworkVisualization() {
-      const neuronGeometry = new THREE.SphereGeometry(0.8, 32, 32);
-      const neuronMaterial = new THREE.MeshPhongMaterial({ 
+      // Define shared materials first
+      const featureMapMaterial = new THREE.MeshPhongMaterial({
         color: originalColor,
-        shininess: 100,
-        emissive: 0x222222
+        emissive: 0x00ffff,
+        emissiveIntensity: 0.0,
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide
       });
 
-      // Helper to create a layer of neurons
-      function createLayer(numNeurons, xPos) {
-        const layer = [];
-        const spacing = 4;
-        const startY = -((numNeurons - 1) * spacing) / 2;
-        for (let i = 0; i < numNeurons; i++) {
-          const neuron = new THREE.Mesh(neuronGeometry, neuronMaterial.clone());
-          neuron.position.set(xPos, startY + i * spacing, 0);
-          scene.add(neuron);
-          layer.push(neuron);
-        }
-        return layer;
-      }
+      // Create connection line material
+      const connectionMaterial = new THREE.LineBasicMaterial({
+        color: 0x00ffff,
+        transparent: true,
+        opacity: 0.1
+      });
 
-      inputNeurons = createLayer(4, -20);
-      hiddenNeurons = createLayer(6, 0);
-      outputNeurons = createLayer(10, 20);
+      // Create layers with the shared material
+      inputLayer = createInputLayer();
+      conv1Layer = createConvLayer(6, -15, featureMapMaterial.clone());
+      pool1Layer = createPoolLayer(6, -10, featureMapMaterial.clone());
+      conv2Layer = createConvLayer(16, -5, featureMapMaterial.clone());
+      pool2Layer = createPoolLayer(16, 0, featureMapMaterial.clone());
+      flattenedLayer = createFlattenedLayer(5);
+      outputLayer = createOutputLayer(10, 15);
 
-      // Create animated connections between layers
-      function createAnimatedConnections(layerA, layerB) {
-        layerA.forEach(a => {
-          layerB.forEach(b => {
-            const numParticles = 5;
-            const points = [];
-            for (let i = 0; i < numParticles; i++) {
-              points.push(new THREE.Vector3());
-            }
-            
-            const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(numParticles * 3);
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            
-            const material = new THREE.PointsMaterial({
-              color: 0x4444ff,
-              size: 0.3,
-              transparent: true,
-              opacity: 0.6
-            });
-            
-            const particles = new THREE.Points(geometry, material);
-            particles.userData = {
-              startPos: a.position.clone(),
-              endPos: b.position.clone(),
-              points: points,
-              speed: 0.6 + Math.random() * 0.4
-            };
-            
-            scene.add(particles);
-          });
-        });
-      }
+      // Create connections between layers
+      createLayerConnections(inputLayer.pixels, conv1Layer.featureMaps, connectionMaterial);
+      createLayerConnections(conv1Layer.featureMaps, pool1Layer.featureMaps, connectionMaterial);
+      createLayerConnections(pool1Layer.featureMaps, conv2Layer.featureMaps, connectionMaterial);
+      createLayerConnections(conv2Layer.featureMaps, pool2Layer.featureMaps, connectionMaterial);
+      createLayerConnections(pool2Layer.featureMaps, flattenedLayer.neurons, connectionMaterial);
+      createLayerConnections(flattenedLayer.neurons, outputLayer.neurons, connectionMaterial);
 
-      createAnimatedConnections(inputNeurons, hiddenNeurons);
-      createAnimatedConnections(hiddenNeurons, outputNeurons);
+      // Create kernel visualization
+      createKernelVisualizations();
     }
 
-    // Update the animation loop to include particle animations
+    function createInputLayer() {
+      const size = 28;
+      const spacing = 0.15;
+      const group = new THREE.Group();
+      const pixels = [];
+
+      for(let y = 0; y < size; y++) {
+        for(let x = 0; x < size; x++) {
+          const pixel = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 0.1, 0.1),
+            new THREE.MeshPhongMaterial({ color: originalColor })
+          );
+          pixel.position.set(
+            (x - size/2) * spacing,
+            (y - size/2) * spacing,
+            -20
+          );
+          pixels.push(pixel);
+          group.add(pixel);
+        }
+      }
+      
+      scene.add(group);
+      return { group, pixels };
+    }
+
+    function createConvLayer(numFeatureMaps, xPos, material) {
+      const group = new THREE.Group();
+      const featureMaps = [];
+
+      for(let i = 0; i < numFeatureMaps; i++) {
+        const map = new THREE.Mesh(
+          new THREE.PlaneGeometry(2, 2),
+          material.clone()
+        );
+        map.position.set(
+          xPos,
+          (i - numFeatureMaps/2) * 2,
+          0
+        );
+        map.userData = { active: 0.0 };
+        featureMaps.push(map);
+        group.add(map);
+
+        // Add feature map label
+        const label = createText(`F${i+1}`, 0.3);
+        label.position.set(0, -1.5, 0);
+        map.add(label);
+      }
+
+      scene.add(group);
+      return { group, featureMaps };
+    }
+
+    function createPoolLayer(numFeatureMaps, xPos, material) {
+      const group = new THREE.Group();
+      const featureMaps = [];
+
+      for(let i = 0; i < numFeatureMaps; i++) {
+        const map = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.5, 1.5),
+          material.clone()
+        );
+        map.position.set(
+          xPos,
+          (i - numFeatureMaps/2) * 2,
+          0
+        );
+        map.userData = { active: 0.0 };
+        featureMaps.push(map);
+        group.add(map);
+
+        // Add pooling label
+        const label = createText('P', 0.3);
+        label.position.set(0, -1, 0);
+        map.add(label);
+      }
+
+      scene.add(group);
+      return { group, featureMaps };
+    }
+
+    function createFlattenedLayer(xPos) {
+      const numNeurons = 120;
+      const spacing = 0.2;
+      const group = new THREE.Group();
+      const neurons = [];
+
+      for(let i = 0; i < numNeurons; i++) {
+        const neuron = new THREE.Mesh(
+          new THREE.SphereGeometry(0.1, 16, 16),
+          new THREE.MeshPhongMaterial({ color: originalColor })
+        );
+        neuron.position.set(
+          xPos,
+          (i - numNeurons/2) * spacing,
+          0
+        );
+        neurons.push(neuron);
+        group.add(neuron);
+      }
+
+      const label = createText('Flattened', 0.5);
+      label.position.set(0, -12, 0);
+      group.add(label);
+
+      scene.add(group);
+      return { group, neurons };
+    }
+
+    function createOutputLayer(numOutputs, xPos) {
+      const spacing = 1;
+      const group = new THREE.Group();
+      const neurons = [];
+
+      for(let i = 0; i < numOutputs; i++) {
+        const neuron = new THREE.Mesh(
+          new THREE.SphereGeometry(0.3, 32, 32),
+          new THREE.MeshPhongMaterial({ color: originalColor })
+        );
+        neuron.position.set(
+          xPos,
+          (i - numOutputs/2) * spacing,
+          0
+        );
+        neurons.push(neuron);
+        group.add(neuron);
+
+        // Add digit label
+        const label = createText(`${i}`, 0.3);
+        label.position.set(0.5, 0, 0);
+        neuron.add(label);
+      }
+
+      scene.add(group);
+      return { group, neurons };
+    }
+
+    function createKernelVisualizations() {
+      const kernelMaterial = new THREE.MeshPhongMaterial({
+        color: 0x00ffff,
+        emissive: 0x00ffff,
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide
+      });
+
+      convKernel = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        kernelMaterial
+      );
+      convKernel.position.set(-17, 0, 0);
+      scene.add(convKernel);
+    }
+
+    function createText(text, size) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 256;
+      canvas.height = 64;
+
+      ctx.fillStyle = '#00ffff';
+      ctx.font = '32px "Share Tech Mono"';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, canvas.width/2, canvas.height/2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        side: THREE.DoubleSide
+      });
+
+      const geometry = new THREE.PlaneGeometry(size * text.length * 0.3, size);
+      return new THREE.Mesh(geometry, material);
+    }
+
+    // Update the animation loop
     function animate() {
       requestAnimationFrame(animate);
       
-      // Update particle positions
+      const time = Date.now() * 0.001;
+      
+      // Update all feature map shaders
+      updateFeatureMaps(conv1Layer.featureMaps, time);
+      updateFeatureMaps(pool1Layer.featureMaps, time);
+      updateFeatureMaps(conv2Layer.featureMaps, time);
+      updateFeatureMaps(pool2Layer.featureMaps, time);
+      
+      // Update kernel visualization
+      if(convKernel && convKernel.material) {
+        convKernel.material.emissiveIntensity = (Math.sin(time * 3) * 0.5 + 0.5) * 0.5;
+      }
+
+      // Pulse effect for connections
       scene.children.forEach(child => {
-        if (child instanceof THREE.Points) {
-          const positions = child.geometry.attributes.position.array;
-          const userData = child.userData;
-          
-          for (let i = 0; i < positions.length; i += 3) {
-            const t = ((Date.now() * userData.speed) % 2000) / 2000;
-            const particleIndex = i / 3;
-            const particleT = (t + (particleIndex / (positions.length / 3))) % 1;
-            
-            positions[i] = userData.startPos.x + (userData.endPos.x - userData.startPos.x) * particleT;
-            positions[i + 1] = userData.startPos.y + (userData.endPos.y - userData.startPos.y) * particleT;
-            positions[i + 2] = userData.startPos.z + (userData.endPos.z - userData.startPos.z) * particleT;
-          }
-          
-          child.geometry.attributes.position.needsUpdate = true;
+        if (child instanceof THREE.LineSegments && child.material.transparent) {
+          child.material.opacity = 0.1 + Math.sin(time * 2) * 0.05;
         }
       });
 
       controls.update();
       renderer.render(scene, camera);
+    }
+
+    function updateFeatureMaps(featureMaps, time) {
+      featureMaps.forEach(map => {
+        if(map.material && map.userData) {
+          const activeValue = map.userData.active || 0.0;
+          // Smoother pulsing effect
+          map.material.emissiveIntensity = (Math.sin(time * 2) * 0.3 + 0.7) * activeValue;
+          // Scale effect for active maps
+          const scale = 1 + (activeValue * 0.2 * Math.sin(time * 3));
+          map.scale.set(scale, scale, 1);
+        }
+      });
     }
 
     /***********************
@@ -251,11 +630,14 @@
     let isDrawing = false;
     let lastPos = { x: 0, y: 0 };
 
-    // Resize the canvas to fit its container
+    // Modify drawing canvas setup for mobile
     function resizeDrawingCanvas() {
       const container = document.getElementById('canvas-container');
-      drawCanvas.width = container.clientWidth - 20;
-      drawCanvas.height = container.clientHeight * 0.6;
+      const maxSize = Math.min(container.clientWidth - 20, container.clientHeight * 0.7);
+      
+      drawCanvas.width = maxSize;
+      drawCanvas.height = maxSize;
+      
       ctx.fillStyle = "black";
       ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
     }
@@ -265,29 +647,57 @@
     // Get the pointer position relative to the canvas
     function getCanvasPos(evt) {
       const rect = drawCanvas.getBoundingClientRect();
+      const x = evt.clientX || evt.touches[0].clientX;
+      const y = evt.clientY || evt.touches[0].clientY;
       return {
-        x: (evt.clientX - rect.left) * (drawCanvas.width / rect.width),
-        y: (evt.clientY - rect.top) * (drawCanvas.height / rect.height)
+        x: (x - rect.left) * (drawCanvas.width / rect.width),
+        y: (y - rect.top) * (drawCanvas.height / rect.height)
       };
     }
-    drawCanvas.addEventListener('pointerdown', e => {
+
+    // Mouse event listeners
+    drawCanvas.addEventListener('mousedown', e => {
       isDrawing = true;
       lastPos = getCanvasPos(e);
     });
-    drawCanvas.addEventListener('pointermove', e => {
+
+    drawCanvas.addEventListener('mousemove', e => {
       if (!isDrawing) return;
       const pos = getCanvasPos(e);
+      drawLine(pos);
+    });
+
+    drawCanvas.addEventListener('mouseup', () => { isDrawing = false; });
+    drawCanvas.addEventListener('mouseleave', () => { isDrawing = false; });
+
+    // Touch event listeners
+    drawCanvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      isDrawing = true;
+      lastPos = getCanvasPos(e.touches[0]);
+    }, { passive: false });
+
+    drawCanvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      const pos = getCanvasPos(e.touches[0]);
+      drawLine(pos);
+    }, { passive: false });
+
+    drawCanvas.addEventListener('touchend', () => { isDrawing = false; });
+    drawCanvas.addEventListener('touchcancel', () => { isDrawing = false; });
+
+    // Shared drawing function
+    function drawLine(pos) {
       ctx.strokeStyle = "white";
-      ctx.lineWidth = 15;
+      ctx.lineWidth = window.innerWidth <= 768 ? 20 : 15; // Thicker lines on mobile
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(lastPos.x, lastPos.y);
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
       lastPos = pos;
-    });
-    drawCanvas.addEventListener('pointerup', () => { isDrawing = false; });
-    drawCanvas.addEventListener('pointerleave', () => { isDrawing = false; });
+    }
 
     // Clear button functionality
     document.getElementById('clearButton').addEventListener('click', () => {
@@ -300,21 +710,66 @@
      * TensorFlow.js Model Setup
      ***********************/
     let model;
+    let predictedIndex = 0;
+
     (async function loadModel() {
       try {
         const predictButton = document.getElementById('predictButton');
         predictButton.disabled = true;
         document.getElementById('predictionResult').innerText = "Loading model...";
+
+        // Load the pre-trained MNIST model directly
+        model = await tf.loadLayersModel('https://raw.githubusercontent.com/tensorflow/tfjs-examples/master/mnist-core/model/model.json');
         
-        // Load MobileNet model which expects [1, 224, 224, 3] input.
-        model = await tf.loadLayersModel("https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json");
-        
+        // Compile the model
+        model.compile({
+          optimizer: 'adam',
+          loss: 'categoricalCrossentropy',
+          metrics: ['accuracy']
+        });
+
         predictButton.disabled = false;
-        document.getElementById('predictionResult').innerText = "Model loaded. Draw an image and press Predict!";
+        document.getElementById('predictionResult').innerText = "Model ready! Draw a digit (0-9) and press Predict!";
+
       } catch (error) {
         console.error("Error loading model:", error);
-        document.getElementById('predictionResult').innerText = "Error loading model. Check console for details.";
-        document.getElementById('predictButton').disabled = true;
+        document.getElementById('predictionResult').innerText = "Creating a fresh model instead...";
+        
+        // If loading fails, create a new model
+        model = tf.sequential();
+        
+        // First convolutional layer
+        model.add(tf.layers.conv2d({
+          inputShape: [28, 28, 1],
+          kernelSize: 3,
+          filters: 8,
+          activation: 'relu'
+        }));
+        model.add(tf.layers.maxPooling2d({poolSize: 2, strides: 2}));
+        
+        // Second convolutional layer
+        model.add(tf.layers.conv2d({
+          kernelSize: 3,
+          filters: 16,
+          activation: 'relu'
+        }));
+        model.add(tf.layers.maxPooling2d({poolSize: 2, strides: 2}));
+        
+        // Flatten and dense layers
+        model.add(tf.layers.flatten());
+        model.add(tf.layers.dense({units: 128, activation: 'relu'}));
+        model.add(tf.layers.dense({units: 10, activation: 'softmax'}));
+        
+        // Compile model
+        model.compile({
+          optimizer: 'adam',
+          loss: 'categoricalCrossentropy',
+          metrics: ['accuracy']
+        });
+
+        predictButton.disabled = false;
+        document.getElementById('predictionResult').innerText = 
+          "Model ready! (Note: Using untrained model) Draw a digit (0-9) and press Predict!";
       }
     })();
 
@@ -326,81 +781,354 @@
         alert("Model not loaded yet.");
         return;
       }
-      // Preprocess the drawing into a 224x224 RGB tensor.
-      const inputTensor = preprocessCanvas(drawCanvas);
-      console.log("Input tensor shape:", inputTensor.shape); // Should be [1, 224, 224, 3]
       
-      // Run the prediction.
-      const prediction = model.predict(inputTensor);
-      const predictionArray = await prediction.data();
-      const predictedIndex = predictionArray.indexOf(Math.max(...predictionArray));
-      
-      // Animate the network visualization based on the prediction.
-      await animateActivation(predictedIndex);
-      
-      // Display the result.
-      document.getElementById('predictionResult').innerText = `Prediction: ${predictedIndex}`;
-      
-      // Dispose of tensors to free memory.
-      tf.dispose([inputTensor, prediction]);
+      try {
+        const inputTensor = preprocessCanvas(drawCanvas);
+        console.log("Input tensor shape:", inputTensor.shape);
+        
+        const prediction = model.predict(inputTensor);
+        const predictionArray = await prediction.data();
+        predictedIndex = predictionArray.indexOf(Math.max(...predictionArray));
+        
+        // Animate the CNN process
+        await animateConvolution(inputTensor);
+        
+        const confidence = (predictionArray[predictedIndex] * 100).toFixed(2);
+        document.getElementById('predictionResult').innerText = 
+          `Prediction: ${predictedIndex} (${confidence}% confident)`;
+        
+        tf.dispose([inputTensor, prediction]);
+      } catch (error) {
+        console.error("Prediction error:", error);
+        document.getElementById('predictionResult').innerText = 
+          "Error making prediction. Check console for details.";
+      }
     });
 
-    // Updated preprocessCanvas function:
-    // It scales the drawn image to 224x224, converts it to an RGB tensor, and normalizes pixel values.
+    // Updated preprocessCanvas function for MNIST model:
+    // It scales the drawn image to 28x28 and converts it to grayscale
     function preprocessCanvas(canvas) {
-      const tempCanvas = document.createElement("canvas");
-      tempCanvas.width = 224;
-      tempCanvas.height = 224;
-      const tempCtx = tempCanvas.getContext("2d");
-      
-      // Fill with black background.
-      tempCtx.fillStyle = "black";
-      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-      
-      // Draw the content of the original canvas scaled to 224x224.
-      tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 224, 224);
-      
-      // Convert the drawn image into a tensor.
-      const imgTensor = tf.browser.fromPixels(tempCanvas);
-      
-      // Expand dims to create a batch (shape becomes [1,224,224,3]), convert to float, and normalize.
-      return imgTensor.expandDims(0).toFloat().div(tf.scalar(255));
+      return tf.tidy(() => {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const imageData = ctx.getImageData(0, 0, width, height).data;
+
+        // Determine bounding box of non-black pixels (threshold > 50)
+        let minX = width, minY = height, maxX = 0, maxY = 0;
+        let foundPixel = false;
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const index = (y * width + x) * 4;
+            const r = imageData[index];
+            if (r > 50) { // pixel is drawn
+              if (x < minX) minX = x;
+              if (y < minY) minY = y;
+              if (x > maxX) maxX = x;
+              if (y > maxY) maxY = y;
+              foundPixel = true;
+            }
+          }
+        }
+
+        // If no drawing found, return a blank 28x28 tensor
+        if (!foundPixel) {
+          return tf.tensor(new Float32Array(28 * 28), [1, 28, 28, 1]);
+        }
+
+        // Calculate bounding box dimensions
+        const boxWidth = maxX - minX;
+        const boxHeight = maxY - minY;
+
+        // Compute the center of the bounding box
+        const centerX = minX + boxWidth / 2;
+        const centerY = minY + boxHeight / 2;
+
+        // Target size for scaling (MNIST digits are scaled to fit in a 20x20 area)
+        const targetSize = 20;
+        const scale = targetSize / Math.max(boxWidth, boxHeight);
+
+        // Create a temporary canvas of size 28x28
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 28;
+        tempCanvas.height = 28;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        // Fill with black background
+        tempCtx.fillStyle = 'black';
+        tempCtx.fillRect(0, 0, 28, 28);
+
+        // Compute scaled dimensions of the bounding box
+        const scaledWidth = boxWidth * scale;
+        const scaledHeight = boxHeight * scale;
+
+        // Calculate the top-left corner for drawing so that the digit is centered
+        const dx = 14 - (centerX - minX) * scale; // 14 is half of 28
+        const dy = 14 - (centerY - minY) * scale;
+
+        // Draw the cropped and scaled region from original canvas onto the 28x28 canvas
+        tempCtx.imageSmoothingEnabled = true;
+        tempCtx.drawImage(canvas, minX, minY, boxWidth, boxHeight, dx, dy, scaledWidth, scaledHeight);
+
+        // Get the final image data from the temp canvas
+        const tempImageData = tempCtx.getImageData(0, 0, 28, 28);
+        const tempData = tempImageData.data;
+        const input = new Float32Array(28 * 28);
+
+        // Convert to grayscale (using red channel) and normalize
+        for (let i = 0; i < tempData.length; i += 4) {
+          input[i / 4] = tempData[i] / 255.0;
+        }
+
+        return tf.tensor(input, [1, 28, 28, 1]);
+      });
     }
 
-    // Animate the neural network activation for each layer sequentially.
-    async function animateActivation(predictedIndex) {
-      function setLayerColor(neuronArray, color) {
-        neuronArray.forEach(neuron => neuron.material.color.setHex(color));
+    async function animateConvolution(inputTensor) {
+      // Reset all layers
+      resetLayerStates();
+      
+      // Convert input tensor to image data
+      const inputData = await tf.browser.toPixels(inputTensor.reshape([28, 28, 1]));
+      
+      // Update input layer visualization with smooth transition
+      for(let i = 0; i < inputLayer.pixels.length; i++) {
+        const value = inputData[i * 4] / 255;
+        const pixel = inputLayer.pixels[i];
+        // Add glow effect for active pixels
+        if(value > 0.1) {
+          pixel.material.emissive.setRGB(value * 0.5, value * 0.5, value);
+          pixel.scale.setScalar(1 + value * 0.5);
+        }
+        pixel.material.color.setRGB(value, value, value);
+        await sleep(1); // Smoother animation
       }
-      
-      // Activate input layer.
-      setLayerColor(inputNeurons, activeColor);
-      await sleep(500);
-      
-      // Activate hidden layer.
-      setLayerColor(hiddenNeurons, activeColor);
-      await sleep(500);
-      
-      // Activate output layer: highlight the predicted neuron in green, others in red.
-      outputNeurons.forEach((neuron, idx) => {
-        if (idx === predictedIndex) {
-          neuron.material.color.setHex(finalColor);
+
+      // Enhanced kernel visualization
+      if(convKernel) {
+        convKernel.material.opacity = 0.8;
+        for(let y = 0; y < 24; y++) {
+          for(let x = 0; x < 24; x++) {
+            convKernel.position.y = (y - 12) * 0.15;
+            convKernel.position.x = (x - 12) * 0.15 - 17;
+            convKernel.scale.setScalar(1.2);
+            await sleep(5);
+            convKernel.scale.setScalar(1.0);
+          }
+        }
+      }
+
+      // Activate layers with enhanced visual feedback
+      await activateLayerSequentially(conv1Layer.featureMaps, 80);
+      await activateLayerSequentially(pool1Layer.featureMaps, 80);
+      await activateLayerSequentially(conv2Layer.featureMaps, 40);
+      await activateLayerSequentially(pool2Layer.featureMaps, 40);
+      await activateLayerSequentially(flattenedLayer.neurons, 5);
+
+      // Enhanced output layer animation
+      outputLayer.neurons.forEach((neuron, idx) => {
+        if(idx === predictedIndex) {
+          neuron.material.emissive.setHex(highlightColor);
+          neuron.material.emissiveIntensity = 1.0;
+          neuron.scale.set(1.8, 1.8, 1.8);
         } else {
-          neuron.material.color.setHex(inactiveColor);
+          neuron.material.emissive.setHex(inactiveColor);
+          neuron.material.emissiveIntensity = 0.1;
+          neuron.scale.set(0.7, 0.7, 0.7);
         }
       });
-      await sleep(1000);
-      
-      // Reset all neurons to their original color.
-      setLayerColor(inputNeurons, originalColor);
-      setLayerColor(hiddenNeurons, originalColor);
-      setLayerColor(outputNeurons, originalColor);
+    }
+
+    // Helper function to reset layer states
+    function resetLayerStates() {
+      const resetMesh = (mesh) => {
+        if(mesh.material) {
+          mesh.material.emissiveIntensity = 0;
+          mesh.scale.set(1, 1, 1);
+        }
+      };
+
+      inputLayer.pixels.forEach(resetMesh);
+      conv1Layer.featureMaps.forEach(resetMesh);
+      pool1Layer.featureMaps.forEach(resetMesh);
+      conv2Layer.featureMaps.forEach(resetMesh);
+      pool2Layer.featureMaps.forEach(resetMesh);
+      flattenedLayer.neurons.forEach(resetMesh);
+      outputLayer.neurons.forEach(resetMesh);
+    }
+
+    // Helper function for sequential layer activation
+    async function activateLayerSequentially(nodes, delay) {
+      for(let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        node.userData.active = 1.0;
+        node.scale.set(1.2, 1.2, 1.2);
+        await sleep(delay);
+        node.scale.set(1.0, 1.0, 1.0);
+      }
     }
 
     // Utility sleep function for animation timing.
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
+
+    // Add matrix rain effect
+    function createMatrixRainEffect() {
+      const canvas = document.getElementById('matrixBg');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      const chars = "01";
+      const fontSize = 10;
+      const columns = canvas.width / fontSize;
+      const drops = [];
+      
+      for(let x = 0; x < columns; x++) {
+        drops[x] = 1;
+      }
+      
+      function drawMatrix() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = "#00ffff22";
+        ctx.font = fontSize + "px 'Share Tech Mono'";
+        
+        for(let i = 0; i < drops.length; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+          
+          if(drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+            drops[i] = 0;
+          
+          drops[i]++;
+        }
+      }
+      
+      setInterval(drawMatrix, 50);
+    }
+
+    // Updated setLayerColor function
+    function setLayerColor(neuronArray, color) {
+      neuronArray.forEach(neuron => neuron.material.color.setHex(color));
+    }
+
+    // Add new function to create connections between layers
+    function createLayerConnections(fromNodes, toNodes, material) {
+      const connectionGeometry = new THREE.BufferGeometry();
+      const positions = [];
+
+      // Improved connection logic for better visibility
+      const maxConnectionsPerNode = Math.min(5, Math.ceil(toNodes.length / 3));
+      
+      fromNodes.forEach(fromNode => {
+        // Select closest target nodes instead of random
+        const targetNodes = toNodes
+          .sort((a, b) => {
+            const distA = fromNode.position.distanceTo(a.position);
+            const distB = fromNode.position.distanceTo(b.position);
+            return distA - distB;
+          })
+          .slice(0, maxConnectionsPerNode);
+        
+        targetNodes.forEach(toNode => {
+          // Create curved connections
+          const midPoint = new THREE.Vector3().addVectors(fromNode.position, toNode.position).multiplyScalar(0.5);
+          midPoint.z += (Math.random() - 0.5) * 2; // Add slight random offset for better visibility
+          
+          positions.push(
+            fromNode.position.x, fromNode.position.y, fromNode.position.z,
+            midPoint.x, midPoint.y, midPoint.z,
+            midPoint.x, midPoint.y, midPoint.z,
+            toNode.position.x, toNode.position.y, toNode.position.z
+          );
+        });
+      });
+
+      connectionGeometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+
+      const connections = new THREE.LineSegments(
+        connectionGeometry,
+        new THREE.LineBasicMaterial({
+          color: 0x00ffff,
+          transparent: true,
+          opacity: 0.15,
+          linewidth: 1
+        })
+      );
+      scene.add(connections);
+      return connections;
+    }
+
+    /***********************
+     * Training Data Collection
+     ***********************/
+    // Store training examples in memory
+    let trainingExamples = [];
+    
+    // Function to one-hot encode labels
+    function oneHotEncode(label, numClasses = 10) {
+      const encoded = new Float32Array(numClasses);
+      encoded[label] = 1;
+      return encoded;
+    }
+
+    // Save button click handler
+    document.getElementById('saveButton').addEventListener('click', async () => {
+      const labelInput = document.getElementById('correctLabel');
+      const label = parseInt(labelInput.value);
+      
+      // Validate input
+      if (isNaN(label) || label < 0 || label > 9) {
+        alert('Please enter a valid digit (0-9)');
+        return;
+      }
+
+      try {
+        // Preprocess the current drawing
+        const inputTensor = preprocessCanvas(drawCanvas);
+        
+        // Store the example
+        trainingExamples.push({
+          tensor: inputTensor,
+          label: oneHotEncode(label)
+        });
+
+        // Update status
+        const status = document.getElementById('trainingStatus');
+        status.innerText = `Saved ${trainingExamples.length} training examples`;
+
+        // Clear the input
+        labelInput.value = '';
+        
+        // Optional: Clear the canvas for the next example
+        const clearButton = document.getElementById('clearButton');
+        clearButton.click();
+
+      } catch (error) {
+        console.error('Error saving training example:', error);
+        alert('Error saving training example. Check console for details.');
+      }
+    });
+
+    // Cleanup function to prevent memory leaks
+    function cleanupTrainingExamples() {
+      trainingExamples.forEach(example => {
+        if (example.tensor) {
+          example.tensor.dispose();
+        }
+      });
+      trainingExamples = [];
+    }
+
+    // Add cleanup call when window unloads
+    window.addEventListener('unload', cleanupTrainingExamples);
 
     /***********************
      * Start Everything
