@@ -40,7 +40,8 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      position: relative; /* For proper stacking context */
+      position: relative;
+      background-color: #0a0a1f;
     }
 
     /* Matrix rain effect */
@@ -59,7 +60,7 @@
     #threejs-container {
       flex: 1;
       position: relative;
-      min-height: 60vh; /* Ensure minimum height on mobile */
+      min-height: 50vh;
       overflow: hidden;
       border-bottom: 2px solid #00ffff33;
       box-shadow: 0 0 20px #00ffff22;
@@ -68,24 +69,29 @@
     /* Container for drawing canvas and controls */
     #canvas-container {
       position: relative;
-      min-height: 40vh;
+      min-height: 50vh;
       background: #0a0a1f;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px;
+      padding: 20px;
       box-sizing: border-box;
+      border-top: 2px solid #00ffff44;
     }
 
     /* The drawing canvas */
     #drawCanvas {
+      display: block;
       background: #000011;
-      border: 2px solid #00ffff44;
-      border-radius: 4px;
+      border: 3px solid #00ffff;
+      border-radius: 8px;
       touch-action: none;
-      box-shadow: 0 0 15px #00ffff22;
-      max-width: 100%;
-      max-height: 70%;
+      box-shadow: 0 0 25px #00ffff44;
+      margin: 20px auto;
+      max-width: calc(100% - 40px);
+      max-height: 60vh;
+      min-height: 280px;
+      min-width: 280px;
     }
 
     /* Controls styling */
@@ -159,48 +165,142 @@
       text-align: center;
     }
 
-    /* Mobile-specific styles */
-    @media (max-width: 768px) {
-      .mobile-notice {
-        display: block;
-      }
-
+    /* Updated Mobile-specific styles */
+    @media (max-width: 428px) {
       #threejs-container {
-        min-height: 50vh;
+        min-height: 45vh;
+        touch-action: none; /* Enable custom touch handling */
       }
 
       #canvas-container {
-        min-height: 50vh;
+        min-height: 55vh;
+        padding: 15px;
       }
 
-      #controls {
-        padding: 0 10px;
-      }
-
+      /* Enhanced touch-friendly buttons */
       button {
-        padding: 12px 15px;
-        font-size: 0.9em;
+        padding: 15px;
+        font-size: 1em;
+        min-width: 100px;
+        height: 50px;
+        margin: 5px;
+        border-radius: 12px;
+        background: rgba(0, 17, 51, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
       }
 
+      button:active {
+        transform: scale(0.95) translateY(2px);
+        box-shadow: 0 2px 8px rgba(0, 255, 255, 0.1);
+      }
+
+      /* Enhanced input field */
+      #correctLabel {
+        width: 100px;
+        height: 50px;
+        font-size: 1.2em;
+        border-radius: 12px;
+        text-align: center;
+        background: rgba(0, 17, 51, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      /* Improved prediction result visibility */
       #predictionResult {
-        font-size: 1em;
+        font-size: 1.4em;
+        padding: 15px;
+        margin: 20px 0;
+        background: rgba(0, 17, 51, 0.8);
+        border-radius: 12px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+      }
+
+      /* Add gesture hint overlay */
+      .gesture-hint {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 17, 51, 0.9);
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        z-index: 1000;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .gesture-hint.visible {
+        opacity: 1;
+      }
+
+      /* Enhanced drawing area */
+      #drawCanvas {
+        border: 3px solid rgba(0, 255, 255, 0.3);
+        border-radius: 12px;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.15);
+        touch-action: none;
+      }
+
+      /* Add haptic feedback hint */
+      .haptic-hint {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 17, 51, 0.9);
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        opacity: 0.8;
+        pointer-events: none;
       }
     }
 
-    /* iPhone-specific styles */
-    @media (max-width: 428px) {
-      #threejs-container {
-        min-height: 40vh;
-      }
+    /* Add smooth transitions for all interactive elements */
+    button, input, #drawCanvas {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-      #canvas-container {
-        min-height: 60vh;
-      }
+    /* Enhanced loading indicator */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 10, 31, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
 
-      button {
-        padding: 10px;
-        font-size: 0.8em;
-      }
+    .loading-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0, 255, 255, 0.3);
+      border-top: 3px solid #00ffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     /* Landscape orientation warning */
@@ -220,6 +320,115 @@
         text-align: center;
         padding: 20px;
       }
+    }
+
+    /* Add visual feedback animations */
+    .feedback-flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      animation: flash 0.5s ease-out;
+    }
+
+    .feedback-flash.success {
+      background: rgba(0, 255, 255, 0.1);
+    }
+
+    .feedback-flash.error {
+      background: rgba(255, 0, 0, 0.1);
+    }
+
+    @keyframes flash {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .tutorial-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 10, 31, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+      animation: tutorialEnter 0.5s ease-out;
+    }
+
+    .tutorial-content {
+      background: rgba(0, 17, 51, 0.95);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 80%;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+    }
+
+    .tutorial-step {
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .tutorial-number {
+      width: 30px;
+      height: 30px;
+      background: #00ffff;
+      color: #0a0a1f;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 15px;
+      font-weight: bold;
+    }
+
+    .tutorial-close {
+      background: #00ffff;
+      color: #0a0a1f;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 1.1em;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .tutorial-close:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes tutorialEnter {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .tutorial-exit {
+      animation: tutorialExit 0.5s ease-in forwards;
+    }
+
+    @keyframes tutorialExit {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.9); }
+    }
+
+    /* Enhanced prediction animation */
+    @keyframes predictionPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    #predictionResult.animate {
+      animation: predictionPulse 0.5s ease-out;
     }
   </style>
 </head>
@@ -251,13 +460,334 @@
     </div>
   </div>
 
-  <!-- Load Three.js and OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
-  <!-- Load TensorFlow.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <div class="gesture-hint">
+    <p>👆 Tap to interact</p>
+    <p>✌️ Pinch to zoom</p>
+    <p> Drag to rotate</p>
+  </div>
 
+  <div class="haptic-hint">
+    Haptic feedback enabled
+  </div>
+
+  <div class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Load dependencies with better error handling and local fallbacks -->
   <script>
+    // Function to load script with fallback
+    function loadScriptWithFallback(primarySrc, fallbackSrc) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        
+        script.onerror = () => {
+          console.log(`Failed to load ${primarySrc}, trying fallback...`);
+          if (fallbackSrc) {
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = fallbackSrc;
+            fallbackScript.onload = resolve;
+            fallbackScript.onerror = () => reject(new Error(`Failed to load both primary and fallback sources for ${primarySrc}`));
+            document.head.appendChild(fallbackScript);
+          } else {
+            reject(new Error(`Failed to load ${primarySrc} and no fallback available`));
+          }
+        };
+
+        script.onload = resolve;
+        script.src = primarySrc;
+        document.head.appendChild(script);
+      });
+    }
+
+    // Load all required scripts with fallbacks
+    async function loadDependencies() {
+      try {
+        // Show loading status
+        document.querySelector('.loading-overlay').classList.add('visible');
+        
+        // Load TensorFlow.js first
+        await loadScriptWithFallback(
+          'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js',
+          './lib/tf.min.js'
+        );
+        console.log('TensorFlow.js loaded');
+
+        // Load Three.js
+        await loadScriptWithFallback(
+          'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js',
+          'https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js'
+        );
+        console.log('Three.js loaded');
+
+        // Load OrbitControls after Three.js
+        await loadScriptWithFallback(
+          'https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/examples/js/controls/OrbitControls.js'
+        );
+        console.log('OrbitControls loaded');
+
+        // Verify dependencies are loaded correctly
+        if (typeof tf === 'undefined') {
+          throw new Error('TensorFlow.js failed to initialize');
+        }
+        if (typeof THREE === 'undefined') {
+          throw new Error('Three.js failed to initialize');
+        }
+        if (typeof THREE.OrbitControls === 'undefined') {
+          throw new Error('OrbitControls failed to initialize');
+        }
+
+        console.log('All dependencies loaded and verified');
+        document.querySelector('.loading-overlay').classList.remove('visible');
+        
+        // Initialize the application only after all dependencies are loaded
+        initializeApp();
+
+      } catch (error) {
+        console.error('Error loading dependencies:', error);
+        document.querySelector('.loading-overlay').classList.remove('visible');
+        showError(`Failed to load required libraries: ${error.message}. Please check your internet connection and try again.`);
+      }
+    }
+
+    // Wait for DOM to be ready before loading dependencies
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadDependencies);
+    } else {
+      loadDependencies();
+    }
+  </script>
+
+  <!-- Main application script -->
+  <script>
+    function showError(message) {
+      const container = document.getElementById('threejs-container');
+      container.innerHTML = `
+        <div style="color: #00ffff; text-align: center; padding: 20px;">
+          <p>${message}</p>
+          <p>Try refreshing the page. If the problem persists:</p>
+          <ul style="list-style: none; padding: 0;">
+            <li>1. Check your internet connection</li>
+            <li>2. Clear your browser cache</li>
+            <li>3. Try a different browser</li>
+            <li>4. Ensure JavaScript is enabled</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    function initializeApp() {
+      try {
+        console.log('Initializing application...');
+        
+        // Initialize drawing canvas first
+        initDrawingCanvas();
+        
+        // Try to initialize 3D visualization
+        if (isWebGLAvailable()) {
+          console.log('WebGL is available, initializing Three.js...');
+          initThreeJS();
+        } else {
+          console.log('WebGL not available, falling back to 2D visualization');
+          init2DVisualization();
+        }
+        
+        // Load the model
+        console.log('Loading TensorFlow model...');
+        loadEnhancedModel();
+        
+        // Initialize other features
+        initTouchControls();
+        enhanceDrawingExperience();
+        initSwipeGestures();
+        
+        // Show tutorial if needed
+        if (!localStorage.getItem('tutorialShown')) {
+          setTimeout(showTutorial, 1000);
+        }
+
+        console.log('Application initialized successfully');
+      } catch (error) {
+        console.error('Error initializing application:', error);
+        showError(`Failed to initialize the application: ${error.message}`);
+      }
+    }
+
+    function initDrawingCanvas() {
+      console.log('Initializing drawing canvas...');
+      const drawCanvas = document.getElementById('drawCanvas');
+      if (!drawCanvas) {
+        console.error('Drawing canvas element not found');
+        return;
+      }
+      
+      const ctx = drawCanvas.getContext('2d');
+      if (!ctx) {
+        console.error('Could not get 2D context');
+        return;
+      }
+      
+      // Set canvas size
+      const container = document.getElementById('canvas-container');
+      if (!container) {
+        console.error('Canvas container not found');
+        return;
+      }
+      
+      console.log('Container dimensions:', container.clientWidth, container.clientHeight);
+      const maxSize = Math.min(container.clientWidth - 40, container.clientHeight * 0.6);
+      const size = Math.max(maxSize, 280); // Ensure minimum size of 280px
+      console.log('Setting canvas size to:', size);
+      
+      drawCanvas.width = size;
+      drawCanvas.height = size;
+      
+      // Set canvas style properties explicitly
+      drawCanvas.style.display = 'block';
+      drawCanvas.style.margin = '20px auto';
+      drawCanvas.style.border = '3px solid #00ffff';
+      drawCanvas.style.borderRadius = '8px';
+      drawCanvas.style.boxShadow = '0 0 25px #00ffff44';
+      drawCanvas.style.backgroundColor = '#000011';
+      
+      // Clear canvas with black background
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+      
+      // Add a hint text
+      ctx.fillStyle = "#00ffff33";
+      ctx.font = "20px 'Share Tech Mono'";
+      ctx.textAlign = "center";
+      ctx.fillText("Draw a digit (0-9) here", drawCanvas.width/2, drawCanvas.height/2);
+      
+      console.log('Drawing canvas initialized');
+    }
+
+    // Ensure canvas is resized when window is resized
+    window.addEventListener('resize', () => {
+      console.log('Window resized, updating canvas size');
+      initDrawingCanvas();
+    });
+
+    // Modify the initThreeJS function
+    function initThreeJS() {
+      try {
+        const container = document.getElementById('threejs-container');
+        
+        // Clear any existing content
+        container.innerHTML = '';
+        
+        // Create a new canvas for Three.js
+        const canvas = document.createElement('canvas');
+        container.appendChild(canvas);
+        
+        // Scene setup
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1f);
+        
+        // Camera setup
+        const aspect = container.clientWidth / container.clientHeight;
+        camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+        camera.position.z = 50;
+        
+        // Renderer setup
+        renderer = new THREE.WebGLRenderer({
+          canvas: canvas,
+          antialias: true,
+          powerPreference: "default",
+          alpha: true
+        });
+        
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(1);
+
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(0, 10, 10);
+        scene.add(directionalLight);
+
+        // Setup controls
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = false;
+        controls.minDistance = 20;
+        controls.maxDistance = 100;
+        controls.maxPolarAngle = Math.PI / 2;
+
+        // Create neural network visualization
+        createNeuralNetworkVisualization();
+        
+        // Add window resize handler
+        window.addEventListener('resize', onWindowResize);
+        
+        // Start animation loop
+        animate();
+        
+      } catch (error) {
+        console.error('Error in Three.js initialization:', error);
+        init2DVisualization(); // Fallback to 2D
+      }
+    }
+
+    // Update the animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const time = Date.now() * 0.001;
+      
+      // Only update feature maps if they exist
+      if (conv1Layer?.featureMaps) updateFeatureMaps(conv1Layer.featureMaps, time);
+      if (pool1Layer?.featureMaps) updateFeatureMaps(pool1Layer.featureMaps, time);
+      if (conv2Layer?.featureMaps) updateFeatureMaps(conv2Layer.featureMaps, time);
+      if (pool2Layer?.featureMaps) updateFeatureMaps(pool2Layer.featureMaps, time);
+      
+      // Update kernel visualization if it exists
+      if (convKernel?.material) {
+        convKernel.material.emissiveIntensity = (Math.sin(time * 3) * 0.5 + 0.5) * 0.5;
+      }
+
+      // Pulse effect for connections if scene exists
+      if (scene) {
+        scene.children.forEach(child => {
+          if (child instanceof THREE.LineSegments && child.material.transparent) {
+            child.material.opacity = 0.1 + Math.sin(time * 2) * 0.05;
+          }
+        });
+      }
+
+      // Update controls if they exist
+      if (controls) controls.update();
+      
+      // Render if both scene and camera exist
+      if (scene && camera && renderer) {
+        renderer.render(scene, camera);
+      }
+    }
+
+    // Update the WebGL check function
+    function isWebGLAvailable() {
+      try {
+        const canvas = document.createElement('canvas');
+        const contextNames = ['webgl2', 'webgl', 'experimental-webgl'];
+        
+        for (const name of contextNames) {
+          const context = canvas.getContext(name);
+          if (context) {
+            context.getExtension('WEBGL_lose_context')?.loseContext();
+            return true;
+          }
+        }
+        return false;
+      } catch (e) {
+        return false;
+      }
+    }
+
     /***********************
      * 3D Neural Network Visualization Setup
      ***********************/
@@ -284,64 +814,90 @@
     window.addEventListener('orientationchange', handleOrientation);
     handleOrientation();
 
-    // Initialize Three.js scene, camera, renderer, and controls
-    function initThreeJS() {
+    // 2D Fallback visualization
+    function init2DVisualization() {
       const container = document.getElementById('threejs-container');
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0a1f);
+      const canvas = document.createElement('canvas');
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.background = '#0a0a1f';
+      container.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
       
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-      // Position camera for better overview
-      camera.position.set(20, 15, 40);
-      camera.lookAt(0, 0, 0);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(width, height);
-      renderer.setClearColor(0x0a0a1f);
-      container.appendChild(renderer.domElement);
-
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.autoRotate = false; // Disable auto-rotation
-      controls.minDistance = 20;
-      controls.maxDistance = 100;
-      controls.maxPolarAngle = Math.PI / 1.5; // Limit vertical rotation
-
-      // Enhanced lighting for better visibility
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-      scene.add(ambientLight);
-
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(5, 5, 5);
-      scene.add(directionalLight);
-
-      const pointLight1 = new THREE.PointLight(0x00ffff, 1);
-      pointLight1.position.set(10, 10, 10);
-      scene.add(pointLight1);
-
-      const pointLight2 = new THREE.PointLight(0x0088ff, 1);
-      pointLight2.position.set(-10, -10, 10);
-      scene.add(pointLight2);
-
-      createNeuralNetworkVisualization();
-      createMatrixRainEffect();
+      function draw2DNetwork() {
+        const width = canvas.width = container.clientWidth;
+        const height = canvas.height = container.clientHeight;
+        
+        // Clear canvas
+        ctx.fillStyle = '#0a0a1f';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw network layers
+        const layers = [
+          {name: 'Input', nodes: 784},
+          {name: 'Conv1', nodes: 32},
+          {name: 'Pool1', nodes: 16},
+          {name: 'Conv2', nodes: 64},
+          {name: 'Pool2', nodes: 32},
+          {name: 'Dense', nodes: 128},
+          {name: 'Output', nodes: 10}
+        ];
+        
+        const spacing = width / (layers.length + 1);
+        
+        // Draw connections
+        ctx.strokeStyle = '#00ffff22';
+        ctx.lineWidth = 0.5;
+        
+        // Draw nodes
+        layers.forEach((layer, i) => {
+          const x = spacing * (i + 1);
+          const nodeSpacing = Math.min(height / layer.nodes, 10);
+          const startY = (height - (layer.nodes * nodeSpacing)) / 2;
+          
+          // Draw layer label
+          ctx.fillStyle = '#00ffff';
+          ctx.font = '14px "Share Tech Mono"';
+          ctx.textAlign = 'center';
+          ctx.fillText(layer.name, x, 20);
+          
+          // Draw nodes
+          for(let j = 0; j < Math.min(layer.nodes, height/nodeSpacing); j++) {
+            const y = startY + (j * nodeSpacing);
+            ctx.beginPath();
+            ctx.arc(x, y, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#00ffff';
+            ctx.fill();
+          }
+          
+          // Draw ellipsis if there are more nodes
+          if(layer.nodes > height/nodeSpacing) {
+            ctx.fillText('...', x, height - 20);
+          }
+        });
+      }
       
-      // Add layer labels
-      addLayerLabels();
+      // Initial draw
+      draw2DNetwork();
       
-      window.addEventListener('resize', onWindowResize, false);
+      // Redraw on resize
+      window.addEventListener('resize', draw2DNetwork);
+      
+      // Animate
+      function animate2D() {
+        requestAnimationFrame(animate2D);
+        // Add simple animation effects here if desired
+      }
+      animate2D();
     }
 
     function onWindowResize() {
       const container = document.getElementById('threejs-container');
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      camera.aspect = width / height;
+      const aspect = container.clientWidth / container.clientHeight;
+      camera.aspect = aspect;
       camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
+      renderer.setSize(container.clientWidth, container.clientHeight);
     }
 
     function addLayerLabels() {
@@ -364,6 +920,34 @@
 
     // Create a simplified neural network with three layers:
     // Input: 4 nodes, Hidden: 6 nodes, Output: 10 nodes
+    
+    function createLayerConnections(sourceNodes, targetNodes, material) {
+      const geometry = new THREE.BufferGeometry();
+      const positions = [];
+
+      // Create connections between each source node and target node
+      sourceNodes.forEach(source => {
+        targetNodes.forEach(target => {
+          // Get positions from the nodes
+          const sourcePos = source.position;
+          const targetPos = target.position;
+          
+          // Add line vertices
+          positions.push(sourcePos.x, sourcePos.y, sourcePos.z);
+          positions.push(targetPos.x, targetPos.y, targetPos.z);
+        });
+      });
+
+      // Create the buffer attribute for positions
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      
+      // Create the line segments
+      const connections = new THREE.LineSegments(geometry, material);
+      scene.add(connections);
+      
+      return connections;
+    }
+
     function createNeuralNetworkVisualization() {
       // Define shared materials first
       const featureMapMaterial = new THREE.MeshPhongMaterial({
@@ -581,34 +1165,6 @@
       return new THREE.Mesh(geometry, material);
     }
 
-    // Update the animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-      
-      const time = Date.now() * 0.001;
-      
-      // Update all feature map shaders
-      updateFeatureMaps(conv1Layer.featureMaps, time);
-      updateFeatureMaps(pool1Layer.featureMaps, time);
-      updateFeatureMaps(conv2Layer.featureMaps, time);
-      updateFeatureMaps(pool2Layer.featureMaps, time);
-      
-      // Update kernel visualization
-      if(convKernel && convKernel.material) {
-        convKernel.material.emissiveIntensity = (Math.sin(time * 3) * 0.5 + 0.5) * 0.5;
-      }
-
-      // Pulse effect for connections
-      scene.children.forEach(child => {
-        if (child instanceof THREE.LineSegments && child.material.transparent) {
-          child.material.opacity = 0.1 + Math.sin(time * 2) * 0.05;
-        }
-      });
-
-      controls.update();
-      renderer.render(scene, camera);
-    }
-
     function updateFeatureMaps(featureMaps, time) {
       featureMaps.forEach(map => {
         if(map.material && map.userData) {
@@ -623,26 +1179,34 @@
     }
 
     /***********************
+     * Canvas Preprocessing
+     ***********************/
+    function preprocessCanvas(canvas) {
+      return tf.tidy(() => {
+        // Get canvas data
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        // Create a tensor from the image data
+        let tensor = tf.browser.fromPixels(imageData, 1) // Get grayscale image
+          .resizeBilinear([28, 28]) // Resize to model input size
+          .toFloat()
+          .div(255.0); // Normalize to [0, 1]
+        
+        // Add batch dimension and ensure proper shape
+        const batchedImage = tensor.reshape([1, 28, 28, 1]);
+        
+        return batchedImage;
+      });
+    }
+
+    /***********************
      * Drawing Canvas Setup
      ***********************/
     const drawCanvas = document.getElementById('drawCanvas');
     const ctx = drawCanvas.getContext('2d');
     let isDrawing = false;
     let lastPos = { x: 0, y: 0 };
-
-    // Modify drawing canvas setup for mobile
-    function resizeDrawingCanvas() {
-      const container = document.getElementById('canvas-container');
-      const maxSize = Math.min(container.clientWidth - 20, container.clientHeight * 0.7);
-      
-      drawCanvas.width = maxSize;
-      drawCanvas.height = maxSize;
-      
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-    }
-    window.addEventListener('resize', resizeDrawingCanvas);
-    resizeDrawingCanvas();
 
     // Get the pointer position relative to the canvas
     function getCanvasPos(evt) {
@@ -712,359 +1276,288 @@
     let model;
     let predictedIndex = 0;
 
-    (async function loadModel() {
-      try {
-        const predictButton = document.getElementById('predictButton');
-        predictButton.disabled = true;
-        document.getElementById('predictionResult').innerText = "Loading model...";
+    /***********************
+     * Model Architecture
+     ***********************/
+    async function createEnhancedModel() {
+      const model = tf.sequential();
+      
+      // First Convolutional Layer
+      model.add(tf.layers.conv2d({
+        inputShape: [28, 28, 1],
+        kernelSize: 3,
+        filters: 32,
+        activation: 'relu',
+        padding: 'same'
+      }));
+      model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2 }));
+      
+      // Second Convolutional Layer
+      model.add(tf.layers.conv2d({
+        kernelSize: 3,
+        filters: 64,
+        activation: 'relu',
+        padding: 'same'
+      }));
+      model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2 }));
+      
+      // Flatten and Dense Layers
+      model.add(tf.layers.flatten());
+      model.add(tf.layers.dense({ units: 128, activation: 'relu' }));
+      model.add(tf.layers.dropout({ rate: 0.2 }));
+      model.add(tf.layers.dense({ units: 10, activation: 'softmax' }));
 
-        // Load the pre-trained MNIST model directly
-        model = await tf.loadLayersModel('https://raw.githubusercontent.com/tensorflow/tfjs-examples/master/mnist-core/model/model.json');
-        
-        // Compile the model
-        model.compile({
-          optimizer: 'adam',
-          loss: 'categoricalCrossentropy',
-          metrics: ['accuracy']
-        });
-
-        predictButton.disabled = false;
-        document.getElementById('predictionResult').innerText = "Model ready! Draw a digit (0-9) and press Predict!";
-
-      } catch (error) {
-        console.error("Error loading model:", error);
-        document.getElementById('predictionResult').innerText = "Creating a fresh model instead...";
-        
-        // If loading fails, create a new model
-        model = tf.sequential();
-        
-        // First convolutional layer
-        model.add(tf.layers.conv2d({
-          inputShape: [28, 28, 1],
-          kernelSize: 3,
-          filters: 8,
-          activation: 'relu'
-        }));
-        model.add(tf.layers.maxPooling2d({poolSize: 2, strides: 2}));
-        
-        // Second convolutional layer
-        model.add(tf.layers.conv2d({
-          kernelSize: 3,
-          filters: 16,
-          activation: 'relu'
-        }));
-        model.add(tf.layers.maxPooling2d({poolSize: 2, strides: 2}));
-        
-        // Flatten and dense layers
-        model.add(tf.layers.flatten());
-        model.add(tf.layers.dense({units: 128, activation: 'relu'}));
-        model.add(tf.layers.dense({units: 10, activation: 'softmax'}));
-        
-        // Compile model
-        model.compile({
-          optimizer: 'adam',
-          loss: 'categoricalCrossentropy',
-          metrics: ['accuracy']
-        });
-
-        predictButton.disabled = false;
-        document.getElementById('predictionResult').innerText = 
-          "Model ready! (Note: Using untrained model) Draw a digit (0-9) and press Predict!";
-      }
-    })();
+      // Compile the model
+      model.compile({
+        optimizer: tf.train.adam(0.001),
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy']
+      });
+      
+      console.log('Model created and compiled successfully');
+      model.summary();
+      
+      return model;
+    }
 
     /***********************
-     * Prediction and Animation
+     * Enhanced Model Training and Prediction
      ***********************/
+    
+    // Data augmentation functions
+    const dataAugmentation = {
+      // Add random rotation
+      rotate: (tensor) => {
+        return tf.tidy(() => {
+          try {
+            // Ensure tensor is rank 4 and has correct shape
+            const shape = tensor.shape;
+            if (shape.length !== 4) {
+              console.log('Reshaping tensor for rotation:', shape);
+              tensor = tensor.reshape([1, 28, 28, 1]);
+            }
+            const angle = (Math.random() - 0.5) * 30 * Math.PI / 180; // ±15 degrees
+            return tf.image.rotateWithOffset(tensor, angle);
+          } catch (error) {
+            console.error('Error in rotate augmentation:', error);
+            return tensor; // Return original tensor if augmentation fails
+          }
+        });
+      },
+      
+      // Add random noise
+      addNoise: (tensor) => {
+        return tf.tidy(() => {
+          try {
+            // Ensure tensor is rank 4
+            const shape = tensor.shape;
+            if (shape.length !== 4) {
+              console.log('Reshaping tensor for noise:', shape);
+              tensor = tensor.reshape([1, 28, 28, 1]);
+            }
+            const noise = tf.randomNormal(tensor.shape, 0, 0.05);
+            return tf.add(tensor, noise).clipByValue(0, 1);
+          } catch (error) {
+            console.error('Error in noise augmentation:', error);
+            return tensor; // Return original tensor if augmentation fails
+          }
+        });
+      },
+      
+      // Random shift
+      shift: (tensor) => {
+        return tf.tidy(() => {
+          try {
+            // Ensure tensor is rank 4
+            const shape = tensor.shape;
+            if (shape.length !== 4) {
+              console.log('Reshaping tensor for shift:', shape);
+              tensor = tensor.reshape([1, 28, 28, 1]);
+            }
+            const shiftX = Math.floor(Math.random() * 3) - 1; // -1 to 1
+            const shiftY = Math.floor(Math.random() * 3) - 1; // -1 to 1
+            return tf.image.transform(
+              tensor,
+              [1, 0, shiftX, 0, 1, shiftY, 0, 0],
+              'nearest'
+            );
+          } catch (error) {
+            console.error('Error in shift augmentation:', error);
+            return tensor; // Return original tensor if augmentation fails
+          }
+        });
+      }
+    };
+
+    // Enhanced prediction with better error handling
+    async function enhancedPredict(inputTensor) {
+      const numAugmentations = 5;
+      const predictions = [];
+      
+      try {
+        console.log('Starting prediction with input tensor shape:', inputTensor.shape);
+        
+        // Verify model is ready
+        if (!model) {
+          throw new Error('Model not initialized');
+        }
+
+        // Make multiple predictions with different augmentations
+        for (let i = 0; i < numAugmentations; i++) {
+          const augmentedTensor = tf.tidy(() => {
+            let augmented = inputTensor.clone();
+            console.log(`Augmentation ${i + 1}/${numAugmentations}`);
+            
+            try {
+              // Apply random augmentations with proper error handling
+              if (Math.random() > 0.5) {
+                augmented = dataAugmentation.rotate(augmented);
+                console.log('Rotation applied');
+              }
+              if (Math.random() > 0.5) {
+                augmented = dataAugmentation.addNoise(augmented);
+                console.log('Noise added');
+              }
+              if (Math.random() > 0.5) {
+                augmented = dataAugmentation.shift(augmented);
+                console.log('Shift applied');
+              }
+              
+              return augmented;
+            } catch (error) {
+              console.error('Error during augmentation:', error);
+              return augmented; // Return unaugmented tensor if augmentation fails
+            }
+          });
+          
+          try {
+            console.log(`Predicting augmentation ${i + 1}, tensor shape:`, augmentedTensor.shape);
+            const prediction = await model.predict(augmentedTensor).data();
+            predictions.push(Array.from(prediction));
+          } catch (error) {
+            console.error(`Error predicting augmentation ${i + 1}:`, error);
+          } finally {
+            tf.dispose(augmentedTensor);
+          }
+        }
+        
+        if (predictions.length === 0) {
+          throw new Error('No successful predictions made');
+        }
+        
+        // Average predictions
+        const avgPrediction = predictions[0].map((_, idx) => {
+          return predictions.reduce((sum, p) => sum + p[idx], 0) / predictions.length;
+        });
+        
+        // Calculate confidence metrics
+        const maxProb = Math.max(...avgPrediction);
+        const predictedIndex = avgPrediction.indexOf(maxProb);
+        const entropy = -avgPrediction.reduce((sum, p) => {
+          return sum + (p > 0 ? p * Math.log(p) : 0);
+        }, 0);
+        
+        console.log('Prediction successful:', {
+          index: predictedIndex,
+          confidence: maxProb,
+          entropy: entropy
+        });
+        
+        return {
+          index: predictedIndex,
+          confidence: maxProb,
+          entropy: entropy,
+          distribution: avgPrediction
+        };
+      } catch (error) {
+        console.error('Error in prediction process:', error);
+        throw new Error(`Failed to process the image: ${error.message}`);
+      } finally {
+        // Cleanup any remaining tensors
+        tf.dispose(predictions);
+      }
+    }
+
+    // Update the prediction button click handler with better error handling
     document.getElementById('predictButton').addEventListener('click', async () => {
       if (!model) {
-        alert("Model not loaded yet.");
+        alert("Model not loaded yet. Please wait...");
         return;
       }
       
       try {
+        // Show loading overlay
+        document.querySelector('.loading-overlay').classList.add('visible');
+        
+        console.log('Processing canvas input...');
         const inputTensor = preprocessCanvas(drawCanvas);
-        console.log("Input tensor shape:", inputTensor.shape);
+        console.log('Input tensor created with shape:', inputTensor.shape);
         
-        const prediction = model.predict(inputTensor);
-        const predictionArray = await prediction.data();
-        predictedIndex = predictionArray.indexOf(Math.max(...predictionArray));
+        const prediction = await enhancedPredict(inputTensor);
+        console.log('Prediction completed:', prediction);
         
-        // Animate the CNN process
-        await animateConvolution(inputTensor);
+        // Provide detailed feedback based on confidence
+        let resultMessage = `Prediction: ${prediction.index}`;
+        resultMessage += `\nConfidence: ${(prediction.confidence * 100).toFixed(1)}%`;
         
-        const confidence = (predictionArray[predictedIndex] * 100).toFixed(2);
-        document.getElementById('predictionResult').innerText = 
-          `Prediction: ${predictedIndex} (${confidence}% confident)`;
+        if (prediction.confidence < 0.5) {
+          resultMessage += "\n⚠️ Low confidence prediction";
+        } else if (prediction.confidence > 0.9) {
+          resultMessage += "\n✨ High confidence prediction";
+          hapticFeedback.heavy();
+        } else {
+          hapticFeedback.medium();
+        }
         
-        tf.dispose([inputTensor, prediction]);
+        // Update UI
+        updatePredictionResult(resultMessage.replace(/\n/g, '<br>'));
+        
       } catch (error) {
         console.error("Prediction error:", error);
-        document.getElementById('predictionResult').innerText = 
-          "Error making prediction. Check console for details.";
+        updatePredictionResult("Error making prediction. Please try drawing the digit more clearly.");
+      } finally {
+        // Always cleanup and hide loading overlay
+        document.querySelector('.loading-overlay').classList.remove('visible');
       }
     });
 
-    // Updated preprocessCanvas function for MNIST model:
-    // It scales the drawn image to 28x28 and converts it to grayscale
-    function preprocessCanvas(canvas) {
-      return tf.tidy(() => {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        const imageData = ctx.getImageData(0, 0, width, height).data;
+    // Enhanced model loading with fallback and progress
+    async function loadEnhancedModel() {
+      try {
+        const predictButton = document.getElementById('predictButton');
+        predictButton.disabled = true;
+        document.getElementById('predictionResult').innerText = "Loading model...";
+        document.querySelector('.loading-overlay').classList.add('visible');
 
-        // Determine bounding box of non-black pixels (threshold > 50)
-        let minX = width, minY = height, maxX = 0, maxY = 0;
-        let foundPixel = false;
-        for (let y = 0; y < height; y++) {
-          for (let x = 0; x < width; x++) {
-            const index = (y * width + x) * 4;
-            const r = imageData[index];
-            if (r > 50) { // pixel is drawn
-              if (x < minX) minX = x;
-              if (y < minY) minY = y;
-              if (x > maxX) maxX = x;
-              if (y > maxY) maxY = y;
-              foundPixel = true;
-            }
-          }
-        }
-
-        // If no drawing found, return a blank 28x28 tensor
-        if (!foundPixel) {
-          return tf.tensor(new Float32Array(28 * 28), [1, 28, 28, 1]);
-        }
-
-        // Calculate bounding box dimensions
-        const boxWidth = maxX - minX;
-        const boxHeight = maxY - minY;
-
-        // Compute the center of the bounding box
-        const centerX = minX + boxWidth / 2;
-        const centerY = minY + boxHeight / 2;
-
-        // Target size for scaling (MNIST digits are scaled to fit in a 20x20 area)
-        const targetSize = 20;
-        const scale = targetSize / Math.max(boxWidth, boxHeight);
-
-        // Create a temporary canvas of size 28x28
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = 28;
-        tempCanvas.height = 28;
-        const tempCtx = tempCanvas.getContext('2d');
-
-        // Fill with black background
-        tempCtx.fillStyle = 'black';
-        tempCtx.fillRect(0, 0, 28, 28);
-
-        // Compute scaled dimensions of the bounding box
-        const scaledWidth = boxWidth * scale;
-        const scaledHeight = boxHeight * scale;
-
-        // Calculate the top-left corner for drawing so that the digit is centered
-        const dx = 14 - (centerX - minX) * scale; // 14 is half of 28
-        const dy = 14 - (centerY - minY) * scale;
-
-        // Draw the cropped and scaled region from original canvas onto the 28x28 canvas
-        tempCtx.imageSmoothingEnabled = true;
-        tempCtx.drawImage(canvas, minX, minY, boxWidth, boxHeight, dx, dy, scaledWidth, scaledHeight);
-
-        // Get the final image data from the temp canvas
-        const tempImageData = tempCtx.getImageData(0, 0, 28, 28);
-        const tempData = tempImageData.data;
-        const input = new Float32Array(28 * 28);
-
-        // Convert to grayscale (using red channel) and normalize
-        for (let i = 0; i < tempData.length; i += 4) {
-          input[i / 4] = tempData[i] / 255.0;
-        }
-
-        return tf.tensor(input, [1, 28, 28, 1]);
-      });
-    }
-
-    async function animateConvolution(inputTensor) {
-      // Reset all layers
-      resetLayerStates();
-      
-      // Convert input tensor to image data
-      const inputData = await tf.browser.toPixels(inputTensor.reshape([28, 28, 1]));
-      
-      // Update input layer visualization with smooth transition
-      for(let i = 0; i < inputLayer.pixels.length; i++) {
-        const value = inputData[i * 4] / 255;
-        const pixel = inputLayer.pixels[i];
-        // Add glow effect for active pixels
-        if(value > 0.1) {
-          pixel.material.emissive.setRGB(value * 0.5, value * 0.5, value);
-          pixel.scale.setScalar(1 + value * 0.5);
-        }
-        pixel.material.color.setRGB(value, value, value);
-        await sleep(1); // Smoother animation
-      }
-
-      // Enhanced kernel visualization
-      if(convKernel) {
-        convKernel.material.opacity = 0.8;
-        for(let y = 0; y < 24; y++) {
-          for(let x = 0; x < 24; x++) {
-            convKernel.position.y = (y - 12) * 0.15;
-            convKernel.position.x = (x - 12) * 0.15 - 17;
-            convKernel.scale.setScalar(1.2);
-            await sleep(5);
-            convKernel.scale.setScalar(1.0);
-          }
-        }
-      }
-
-      // Activate layers with enhanced visual feedback
-      await activateLayerSequentially(conv1Layer.featureMaps, 80);
-      await activateLayerSequentially(pool1Layer.featureMaps, 80);
-      await activateLayerSequentially(conv2Layer.featureMaps, 40);
-      await activateLayerSequentially(pool2Layer.featureMaps, 40);
-      await activateLayerSequentially(flattenedLayer.neurons, 5);
-
-      // Enhanced output layer animation
-      outputLayer.neurons.forEach((neuron, idx) => {
-        if(idx === predictedIndex) {
-          neuron.material.emissive.setHex(highlightColor);
-          neuron.material.emissiveIntensity = 1.0;
-          neuron.scale.set(1.8, 1.8, 1.8);
-        } else {
-          neuron.material.emissive.setHex(inactiveColor);
-          neuron.material.emissiveIntensity = 0.1;
-          neuron.scale.set(0.7, 0.7, 0.7);
-        }
-      });
-    }
-
-    // Helper function to reset layer states
-    function resetLayerStates() {
-      const resetMesh = (mesh) => {
-        if(mesh.material) {
-          mesh.material.emissiveIntensity = 0;
-          mesh.scale.set(1, 1, 1);
-        }
-      };
-
-      inputLayer.pixels.forEach(resetMesh);
-      conv1Layer.featureMaps.forEach(resetMesh);
-      pool1Layer.featureMaps.forEach(resetMesh);
-      conv2Layer.featureMaps.forEach(resetMesh);
-      pool2Layer.featureMaps.forEach(resetMesh);
-      flattenedLayer.neurons.forEach(resetMesh);
-      outputLayer.neurons.forEach(resetMesh);
-    }
-
-    // Helper function for sequential layer activation
-    async function activateLayerSequentially(nodes, delay) {
-      for(let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        node.userData.active = 1.0;
-        node.scale.set(1.2, 1.2, 1.2);
-        await sleep(delay);
-        node.scale.set(1.0, 1.0, 1.0);
-      }
-    }
-
-    // Utility sleep function for animation timing.
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    // Add matrix rain effect
-    function createMatrixRainEffect() {
-      const canvas = document.getElementById('matrixBg');
-      const ctx = canvas.getContext('2d');
-      
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      
-      const chars = "01";
-      const fontSize = 10;
-      const columns = canvas.width / fontSize;
-      const drops = [];
-      
-      for(let x = 0; x < columns; x++) {
-        drops[x] = 1;
-      }
-      
-      function drawMatrix() {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Create a new model
+        model = await createEnhancedModel();
         
-        ctx.fillStyle = "#00ffff22";
-        ctx.font = fontSize + "px 'Share Tech Mono'";
-        
-        for(let i = 0; i < drops.length; i++) {
-          const text = chars[Math.floor(Math.random() * chars.length)];
-          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-          
-          if(drops[i] * fontSize > canvas.height && Math.random() > 0.975)
-            drops[i] = 0;
-          
-          drops[i]++;
-        }
-      }
-      
-      setInterval(drawMatrix, 50);
-    }
-
-    // Updated setLayerColor function
-    function setLayerColor(neuronArray, color) {
-      neuronArray.forEach(neuron => neuron.material.color.setHex(color));
-    }
-
-    // Add new function to create connections between layers
-    function createLayerConnections(fromNodes, toNodes, material) {
-      const connectionGeometry = new THREE.BufferGeometry();
-      const positions = [];
-
-      // Improved connection logic for better visibility
-      const maxConnectionsPerNode = Math.min(5, Math.ceil(toNodes.length / 3));
-      
-      fromNodes.forEach(fromNode => {
-        // Select closest target nodes instead of random
-        const targetNodes = toNodes
-          .sort((a, b) => {
-            const distA = fromNode.position.distanceTo(a.position);
-            const distB = fromNode.position.distanceTo(b.position);
-            return distA - distB;
-          })
-          .slice(0, maxConnectionsPerNode);
-        
-        targetNodes.forEach(toNode => {
-          // Create curved connections
-          const midPoint = new THREE.Vector3().addVectors(fromNode.position, toNode.position).multiplyScalar(0.5);
-          midPoint.z += (Math.random() - 0.5) * 2; // Add slight random offset for better visibility
-          
-          positions.push(
-            fromNode.position.x, fromNode.position.y, fromNode.position.z,
-            midPoint.x, midPoint.y, midPoint.z,
-            midPoint.x, midPoint.y, midPoint.z,
-            toNode.position.x, toNode.position.y, toNode.position.z
-          );
+        // Compile the model
+        model.compile({
+          optimizer: tf.train.adam(0.001),
+          loss: 'categoricalCrossentropy',
+          metrics: ['accuracy']
         });
-      });
 
-      connectionGeometry.setAttribute(
-        'position',
-        new THREE.Float32BufferAttribute(positions, 3)
-      );
+        // Initialize with some random weights
+        await model.predict(tf.zeros([1, 28, 28, 1])).array();
 
-      const connections = new THREE.LineSegments(
-        connectionGeometry,
-        new THREE.LineBasicMaterial({
-          color: 0x00ffff,
-          transparent: true,
-          opacity: 0.15,
-          linewidth: 1
-        })
-      );
-      scene.add(connections);
-      return connections;
+        predictButton.disabled = false;
+        document.getElementById('predictionResult').innerHTML = 
+          "Model ready!<br>Draw a digit (0-9) and tap Predict!";
+        document.querySelector('.loading-overlay').classList.remove('visible');
+        hapticFeedback.heavy();
+
+      } catch (error) {
+        console.error("Error setting up model:", error);
+        document.getElementById('predictionResult').innerHTML = 
+          "Error loading model. Please check your internet connection and try again.";
+        document.querySelector('.loading-overlay').classList.remove('visible');
+      }
     }
+
+    // Start loading the enhanced model
+    loadEnhancedModel();
 
     /***********************
      * Training Data Collection
@@ -1133,8 +1626,354 @@
     /***********************
      * Start Everything
      ***********************/
-    initThreeJS();
-    animate();
+    // Initialize the application when dependencies are loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp();
+    }
+
+    // Add haptic feedback support
+    const hapticFeedback = {
+      light: () => {
+        if (window.navigator.vibrate) {
+          window.navigator.vibrate(10);
+        }
+      },
+      medium: () => {
+        if (window.navigator.vibrate) {
+          window.navigator.vibrate([20, 30, 20]);
+        }
+      },
+      heavy: () => {
+        if (window.navigator.vibrate) {
+          window.navigator.vibrate([30, 40, 30]);
+        }
+      }
+    };
+
+    // Enhanced touch controls for Three.js scene
+    function initTouchControls() {
+      const container = document.getElementById('threejs-container');
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let lastPinchDistance = 0;
+
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          hapticFeedback.light();
+        } else if (e.touches.length === 2) {
+          lastPinchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          hapticFeedback.medium();
+        }
+      });
+
+      container.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) {
+          const deltaX = e.touches[0].clientX - touchStartX;
+          const deltaY = e.touches[0].clientY - touchStartY;
+          
+          camera.position.x += deltaX * 0.1;
+          camera.position.y -= deltaY * 0.1;
+          camera.lookAt(0, 0, 0);
+          
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+          const currentPinchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          
+          const pinchDelta = currentPinchDistance - lastPinchDistance;
+          camera.position.z -= pinchDelta * 0.1;
+          camera.position.z = Math.max(20, Math.min(100, camera.position.z));
+          
+          lastPinchDistance = currentPinchDistance;
+        }
+      });
+
+      // Show gesture hints on first interaction
+      let gestureHintShown = false;
+      container.addEventListener('touchstart', () => {
+        if (!gestureHintShown) {
+          const hint = document.querySelector('.gesture-hint');
+          hint.classList.add('visible');
+          setTimeout(() => {
+            hint.classList.remove('visible');
+          }, 3000);
+          gestureHintShown = true;
+        }
+      }, { once: true });
+    }
+
+    // Enhanced drawing experience
+    function enhanceDrawingExperience() {
+      const drawCanvas = document.getElementById('drawCanvas');
+      let isDrawing = false;
+      let lastPoint = null;
+      let velocityX = 0;
+      let velocityY = 0;
+      const smoothingFactor = 0.85;
+
+      function getPoint(e) {
+        const rect = drawCanvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        return {
+          x: (touch.clientX - rect.left) * (drawCanvas.width / rect.width),
+          y: (touch.clientY - rect.top) * (drawCanvas.height / rect.height)
+        };
+      }
+
+      function drawSmoothLine(start, end) {
+        const ctx = drawCanvas.getContext('2d');
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        
+        // Calculate line width based on velocity
+        const velocity = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+        const baseWidth = window.innerWidth <= 428 ? 20 : 15;
+        ctx.lineWidth = Math.max(baseWidth - velocity * 0.5, 5);
+        
+        ctx.lineTo(end.x, end.y);
+        ctx.strokeStyle = 'white';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+
+      function startDrawing(e) {
+        isDrawing = true;
+        lastPoint = getPoint(e);
+        velocityX = 0;
+        velocityY = 0;
+        hapticFeedback.light();
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        
+        const currentPoint = getPoint(e);
+        
+        // Calculate velocity
+        velocityX = (currentPoint.x - lastPoint.x) * smoothingFactor + velocityX * (1 - smoothingFactor);
+        velocityY = (currentPoint.y - lastPoint.y) * smoothingFactor + velocityY * (1 - smoothingFactor);
+        
+        drawSmoothLine(lastPoint, currentPoint);
+        lastPoint = currentPoint;
+      }
+
+      function stopDrawing() {
+        if (isDrawing) {
+          isDrawing = false;
+          hapticFeedback.light();
+        }
+      }
+
+      // Touch events
+      drawCanvas.addEventListener('touchstart', startDrawing, { passive: false });
+      drawCanvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        draw(e);
+      }, { passive: false });
+      drawCanvas.addEventListener('touchend', stopDrawing);
+      drawCanvas.addEventListener('touchcancel', stopDrawing);
+
+      // Mouse events for non-touch devices
+      drawCanvas.addEventListener('mousedown', startDrawing);
+      drawCanvas.addEventListener('mousemove', draw);
+      drawCanvas.addEventListener('mouseup', stopDrawing);
+      drawCanvas.addEventListener('mouseleave', stopDrawing);
+    }
+
+    // Initialize enhanced controls
+    initTouchControls();
+    enhanceDrawingExperience();
+
+    // Add tutorial overlay
+    function showTutorial() {
+      const tutorial = document.createElement('div');
+      tutorial.className = 'tutorial-overlay';
+      tutorial.innerHTML = `
+        <div class="tutorial-content">
+          <h2>Welcome to Neural Network Visualizer!</h2>
+          <div class="tutorial-step">
+            <div class="tutorial-number">1</div>
+            <p>Draw a digit (0-9) in the drawing area</p>
+          </div>
+          <div class="tutorial-step">
+            <div class="tutorial-number">2</div>
+            <p>Tap "Predict" to see the network in action</p>
+          </div>
+          <div class="tutorial-step">
+            <div class="tutorial-number">3</div>
+            <p>Explore the 3D visualization with gestures</p>
+          </div>
+          <button class="tutorial-close">Got it!</button>
+        </div>
+      `;
+      document.body.appendChild(tutorial);
+
+      tutorial.querySelector('.tutorial-close').addEventListener('click', () => {
+        tutorial.classList.add('tutorial-exit');
+        setTimeout(() => tutorial.remove(), 500);
+        localStorage.setItem('tutorialShown', 'true');
+      });
+    }
+
+    // Show tutorial on first visit
+    if (!localStorage.getItem('tutorialShown')) {
+      setTimeout(showTutorial, 1000);
+    }
+
+    // Add styles for new elements
+    const style = document.createElement('style');
+    style.textContent = `
+      .feedback-flash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        animation: flash 0.5s ease-out;
+      }
+
+      .feedback-flash.success {
+        background: rgba(0, 255, 255, 0.1);
+      }
+
+      .feedback-flash.error {
+        background: rgba(255, 0, 0, 0.1);
+      }
+
+      @keyframes flash {
+        0% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      .tutorial-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(10, 10, 31, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        animation: tutorialEnter 0.5s ease-out;
+      }
+
+      .tutorial-content {
+        background: rgba(0, 17, 51, 0.95);
+        padding: 30px;
+        border-radius: 20px;
+        max-width: 80%;
+        text-align: center;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+      }
+
+      .tutorial-step {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+        text-align: left;
+      }
+
+      .tutorial-number {
+        width: 30px;
+        height: 30px;
+        background: #00ffff;
+        color: #0a0a1f;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 15px;
+        font-weight: bold;
+      }
+
+      .tutorial-close {
+        background: #00ffff;
+        color: #0a0a1f;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 1.1em;
+        margin-top: 20px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .tutorial-close:active {
+        transform: scale(0.95);
+      }
+
+      @keyframes tutorialEnter {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      .tutorial-exit {
+        animation: tutorialExit 0.5s ease-in forwards;
+      }
+
+      @keyframes tutorialExit {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.9); }
+      }
+
+      /* Enhanced prediction animation */
+      @keyframes predictionPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+
+      #predictionResult.animate {
+        animation: predictionPulse 0.5s ease-out;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Enhance prediction result display
+    function updatePredictionResult(message) {
+      const result = document.getElementById('predictionResult');
+      result.innerHTML = message;
+      result.classList.remove('animate');
+      void result.offsetWidth; // Force reflow
+      result.classList.add('animate');
+    }
+
+    // Add swipe gesture to clear canvas
+    function initSwipeGestures() {
+      const drawCanvas = document.getElementById('drawCanvas');
+      let startY;
+
+      drawCanvas.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+      });
+
+      drawCanvas.addEventListener('touchend', (e) => {
+        const endY = e.changedTouches[0].clientY;
+        const deltaY = endY - startY;
+
+        if (deltaY > 100) { // Swipe down to clear
+          document.getElementById('clearButton').click();
+          visualFeedback.success();
+        }
+      });
+    }
+
+    // Initialize swipe gestures
+    initSwipeGestures();
   </script>
 </body>
 </html>
